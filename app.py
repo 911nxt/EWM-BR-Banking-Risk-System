@@ -7,6 +7,11 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:
+    st_autorefresh = None
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "modules")))
 
 from data_loader import load_cappelo_banks_data
@@ -22,7 +27,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Unified Academic UI Styling (Tech Agent Style)
+# Custom Unified Academic UI Styling
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -102,6 +107,22 @@ html, body, [class*="css"] {
 }
 .footer-link:hover {
     text-decoration: underline;
+}
+
+.live-pulse {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -233,18 +254,27 @@ def clean_indicator_string(text, lang='en'):
         return re.sub(r'\s+', ' ', clean).strip()
     return raw
 
-@st.cache_data(show_spinner=False)
-def get_dataset():
-    return load_cappelo_banks_data()
+def apply_realtime_simulation_tick(df_input, volatility=0.025):
+    """Generates dynamic live data fluctuations mimicking Core Banking real-time feeds."""
+    df_live = df_input.copy()
+    num_cols = df_live.select_dtypes(include=[np.number]).columns.tolist()
+    if 'Year' in num_cols:
+        num_cols.remove('Year')
+    for c in num_cols:
+        shocks = np.random.normal(1.0, volatility, size=len(df_live))
+        df_live[c] = df_live[c] * shocks
+    return df_live
 
 @st.cache_data(show_spinner=False)
+def get_base_dataset():
+    return load_cappelo_banks_data()
+
 def get_analysis(df, bank, year):
     analysis_res = analyze_bank(df, bank, year)
     insights_res = explain_bank_risk_factors(df, bank, year)
     var_res = generate_variance_matrix(df, bank, year)
     return analysis_res, insights_res, var_res
 
-@st.cache_data(show_spinner=False)
 def get_sector_data(df, year, lang='en'):
     banks = sorted(df[df['Year'] == year]['Bank'].unique().tolist())
     records = []
@@ -275,7 +305,8 @@ def get_sector_data(df, year, lang='en'):
         comp_df = comp_df.sort_values(by='Risk Score', ascending=False).reset_index(drop=True)
     return comp_df
 
-df_data = get_dataset()
+# Load Initial Dataset
+df_base = get_base_dataset()
 
 # ================= SIDEBAR CONTROLS =================
 with st.sidebar:
@@ -285,12 +316,22 @@ with st.sidebar:
     T = I18N[lang]
 
     st.markdown("---")
-    all_years = sorted(df_data['Year'].unique().tolist(), reverse=True)
+    st.markdown("### 🔴 Real-Time Streaming (Live Feed)")
+    live_streaming = st.toggle("⚡ تفعيل البث اللحظي للبيانات (Live)", value=False)
+    
+    if live_streaming:
+        refresh_sec = st.slider("معدل التحديث (Refresh Rate Sec):", min_value=1, max_value=5, value=2)
+        if st_autorefresh:
+            st_autorefresh(interval=refresh_sec * 1000, key="cappelo_realtime_stream")
+        st.caption("🟢 متصل الآن بمحاكي تدفق المعاملات البنكية اللحظية (Core Banking Stream).")
+
+    st.markdown("---")
+    all_years = sorted(df_base['Year'].unique().tolist(), reverse=True)
     selected_year = st.selectbox("Fiscal Year | السنة المالية:", all_years)
 
     st.markdown("---")
     st.markdown("### 📄 Reports Center")
-    comp_df_en = get_sector_data(df_data, selected_year, lang='en')
+    comp_df_en = get_sector_data(df_base, selected_year, lang='en')
     pdf_sector_bytes = create_sector_risk_pdf(comp_df_en, selected_year)
     st.download_button(
         label=T['download_sector'],
@@ -300,10 +341,17 @@ with st.sidebar:
         use_container_width=True
     )
 
+# Handle Active Dataset (Live vs Static)
+if live_streaming:
+    df_data = apply_realtime_simulation_tick(df_base)
+else:
+    df_data = df_base
+
 # ================= HEADER / HERO BANNER =================
+live_indicator_html = "<span class='live-pulse'></span> <b>LIVE STREAMING ACTIVE</b> | " if live_streaming else ""
 st.markdown(f"""
 <div class="hero-banner">
-    <div class="hero-badge">🏛️ {T['portal_badge']}</div>
+    <div class="hero-badge">{live_indicator_html}🏛️ {T['portal_badge']}</div>
     <h1 style="margin: 0; font-size: 32px; font-weight: 800; line-height: 1.3;">{T['hero_title']}</h1>
     <p style="margin: 10px auto 0 auto; color: #94a3b8; font-size: 15px; max-width: 900px; line-height: 1.6;">
         {T['hero_subtitle']}

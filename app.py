@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -22,6 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS Styling
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap');
@@ -67,6 +69,7 @@ I18N = {
     'en': {
         'title': "🏦 Early Warning System for Banking Risk (EWM-BR)",
         'subtitle': "Predictive Financial Soundness Evaluation based on CAPPELO Framework (Groups 1–7)",
+        'nav_landing': "🏠 Platform Overview & CAPPELO Architecture",
         'nav_sector': "🏢 Cross-Sector Master View",
         'nav_single': "🔍 Single Institution Assessment",
         'total_banks': "Monitored Institutions",
@@ -104,6 +107,7 @@ I18N = {
     'ar': {
         'title': "🏦 منصة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
         'subtitle': "التقييم والاستشراف الذكي لسلامة البنوك استناداً لمحاور CAPPELO السبعة (Groups 1–7)",
+        'nav_landing': "🏠 التعريف بالمنصة ومحاور CAPPELO",
         'nav_sector': "🏢 الشاشة الشاملة للقطاع المصرفي",
         'nav_single': "🔍 التحليل التفصيلي لمصرف فردي",
         'total_banks': "المصارف الخاضعة للرقابة",
@@ -232,7 +236,7 @@ df_data = get_dataset()
 
 # Sidebar Navigation
 with st.sidebar:
-    st.markdown("### ⚙️ Platform Settings")
+    st.markdown("### ⚙️ Platform Navigation")
     enable_arabic = st.toggle("🌐 إظهار الواجهة باللغة العربية (Arabic)", value=False)
     lang = 'ar' if enable_arabic else 'en'
     T = I18N[lang]
@@ -243,7 +247,7 @@ with st.sidebar:
 
     nav_mode = st.radio(
         "Navigation Mode | نمط العرض:",
-        [T['nav_sector'], T['nav_single']],
+        [T['nav_landing'], T['nav_sector'], T['nav_single']],
         index=0
     )
 
@@ -255,14 +259,140 @@ with st.sidebar:
 
 comp_df = get_sector_data(df_data, selected_year, lang=lang)
 
-# Header Section with Direct Download
-col_head, col_btn = st.columns([4, 2])
-with col_head:
-    st.title(T['title'])
-    st.caption(f"{T['subtitle']} | Year: {selected_year}")
-with col_btn:
-    st.markdown("<br>", unsafe_allow_html=True)
-    if nav_mode == T['nav_sector']:
+# ----------------- VIEW 1: EMBEDDED TAILWIND LANDING PAGE -----------------
+if nav_mode == T['nav_landing']:
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="{'ar' if lang == 'ar' else 'en'}" dir="{'rtl' if lang == 'ar' else 'ltr'}">
+    <head>
+        <meta charset="UTF-8">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <style>
+            body {{ font-family: {'"Tajawal"' if lang == 'ar' else '"Plus Jakarta Sans"'}, sans-serif; }}
+            .glass-card {{
+                background: rgba(15, 23, 42, 0.85);
+                backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }}
+            .typewriter-cursor {{
+                display: inline-block;
+                width: 3px;
+                background-color: #38bdf8;
+                animation: blink 0.8s infinite;
+            }}
+            @keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0; }} }}
+        </style>
+    </head>
+    <body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header Badge -->
+            <div class="text-center pt-4 pb-6">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/30 text-sky-400 text-xs sm:text-sm font-semibold mb-6">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>CAPPELO Framework Core Empirical Analysis (2023–2024)</span>
+                </div>
+                
+                <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
+                    {'منظومة الاستشراف والإنذار المبكر للمخاطر المصرفية' if lang == 'ar' else 'Early Warning Model for Banks\' Risk (EWM-BR)'}<br>
+                    <span class="bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                        {'تقييم السلامة المصرفية بإطار CAPPELO' if lang == 'ar' else 'CAPPELO Supervisory Intelligence Framework'}
+                    </span>
+                </h1>
+                
+                <div class="min-h-[60px] text-base sm:text-lg text-slate-300 max-w-3xl mx-auto mb-8 font-medium">
+                    <span id="typewriter"></span><span class="typewriter-cursor">&nbsp;</span>
+                </div>
+            </div>
+
+            <!-- Key Metric Numbers -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
+                    <div class="text-3xl font-extrabold text-sky-400 mb-1">8</div>
+                    <div class="text-xs text-slate-400 font-semibold">{'بنوك مجهلة تحت الرقابة' if lang == 'ar' else 'Monitored Anonymized Banks'}</div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
+                    <div class="text-3xl font-extrabold text-cyan-400 mb-1">7</div>
+                    <div class="text-xs text-slate-400 font-semibold">{'محاور CAPPELO التحليلية' if lang == 'ar' else 'CAPPELO Core Dimensions'}</div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
+                    <div class="text-3xl font-extrabold text-emerald-400 mb-1">144</div>
+                    <div class="text-xs text-slate-400 font-semibold">{'مؤشراً مالياً معيارياً' if lang == 'ar' else 'Standardized Soundness KPIs'}</div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
+                    <div class="text-3xl font-extrabold text-indigo-400 mb-1">90 {'يوم' if lang == 'ar' else 'Days'}</div>
+                    <div class="text-xs text-slate-400 font-semibold">{'أفق استشراف الضغط المالي' if lang == 'ar' else 'Stress Horizon Forecast'}</div>
+                </div>
+            </div>
+
+            <!-- 7 Pillars Grid -->
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-white mb-2">{'محاور التقييم السبعة لإطار CAPPELO' if lang == 'ar' else 'The 7 CAPPELO Analytical Pillars'}</h2>
+                <p class="text-slate-400 text-xs sm:text-sm">{'نمذجة رياضية متكاملة لتقييم الملاءة المالية وحساسية الأسواق والسيولة' if lang == 'ar' else 'Quantitative econometric framework mapping financial resilience across core banking risk dimensions'}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-blue-400 font-bold mb-2">1. Capital Adequacy (C)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'كفاية رأس المال والرافعة المالية ومطابقة بازل 3 لامتصاص الصدمات.' if lang == 'ar' else 'Capital buffer, leverage limits, and risk-weighted asset capacity.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-red-400 font-bold mb-2">2. Asset Quality (A)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'جودة المحفظة الائتمانية ورصد القروض غير المنتظمة (NPL) والمخصصات.' if lang == 'ar' else 'Non-performing loan ratios, provisioning adequacy, and credit quality.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-purple-400 font-bold mb-2">3. Productivity (P)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'كفاءة تشغيل الأصول وتوظيف الموارد البشرية والتقنية.' if lang == 'ar' else 'Asset utilization efficiency and workforce productivity metrics.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-emerald-400 font-bold mb-2">4. Profitability (P)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'العائد على الأصول (ROA)، هامش الفائدة الصافي، واستدامة الأرباح.' if lang == 'ar' else 'Net Interest Margin (NIM), ROA sustainability, and revenue quality.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-amber-400 font-bold mb-2">5. Efficiency (E)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'ضبط نسبة التكلفة إلى الدخل وترشيد المصاريف التشغيلية.' if lang == 'ar' else 'Cost-to-income rationalization and overhead burden management.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800">
+                    <div class="text-cyan-400 font-bold mb-2">6. Liquidity (L)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'الأصول عالية السيولة واستقرار هيكل التمويل واستحقاق الالتزامات.' if lang == 'ar' else 'High-Quality Liquid Assets (HQLA) and short-term maturity profiles.'}</p>
+                </div>
+                <div class="glass-card rounded-xl p-5 border border-slate-800 md:col-span-2 lg:col-span-3">
+                    <div class="text-indigo-400 font-bold mb-2">7. Openness & Sensitivity to Market Risk (O)</div>
+                    <p class="text-slate-400 text-xs leading-relaxed">{'مراقبة تقلبات أسعار الفائدة والعملات الأجنبية وأدوات التحوط.' if lang == 'ar' else 'Foreign exchange structural exposure and market risk sensitivity gaps.'}</p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            lucide.createIcons();
+            const sentences = {'["منظومة رقابية متقدمة ترصد الاستقرار المالي عبر إطار CAPPELO المعتمد.", "استخراج فوري للمؤشرات المعيارية لـ 8 بنوك مجهلة لتأكيد الحياد والسرية.", "توليد تقارير PDF تنفيذية وتفسير سببي متقدم (XAI) للمخاطر."]' if lang == 'ar' else '["Empirical early warning system assessing banking vulnerability via CAPPELO framework.", "Anonymized 8-bank panel dataset ensuring regulatory objectivity and rigor.", "Automated executive PDF reporting with Explainable AI risk decomposition."]'};
+            let sIdx = 0, cIdx = 0, isDel = false;
+            const el = document.getElementById("typewriter");
+            function type() {{
+                const cur = sentences[sIdx];
+                el.textContent = isDel ? cur.substring(0, cIdx - 1) : cur.substring(0, cIdx + 1);
+                cIdx = isDel ? cIdx - 1 : cIdx + 1;
+                let t = isDel ? 20 : 35;
+                if (!isDel && cIdx === cur.length) {{ isDel = true; t = 2200; }}
+                else if (isDel && cIdx === 0) {{ isDel = false; sIdx = (sIdx + 1) % sentences.length; t = 400; }}
+                setTimeout(type, t);
+            }}
+            document.addEventListener("DOMContentLoaded", type);
+        </script>
+    </body>
+    </html>
+    """
+    components.html(html_content, height=880, scrolling=True)
+
+# ----------------- VIEW 2: CROSS-SECTOR MASTER DASHBOARD -----------------
+elif nav_mode == T['nav_sector']:
+    col_head, col_btn = st.columns([4, 2])
+    with col_head:
+        st.title(T['title'])
+        st.caption(f"{T['subtitle']} | Fiscal Year: {selected_year}")
+    with col_btn:
+        st.markdown("<br>", unsafe_allow_html=True)
         comp_df_en = get_sector_data(df_data, selected_year, lang='en')
         pdf_bytes = create_sector_risk_pdf(comp_df_en, selected_year)
         st.download_button(
@@ -272,30 +402,9 @@ with col_btn:
             mime="application/pdf",
             use_container_width=True
         )
-    else:
-        analysis_s, insights_s, _ = get_analysis(df_data, selected_bank, selected_year)
-        top_c = insights_s['Top_Risk_Escalators'][0]['Category'] if insights_s['Top_Risk_Escalators'] else 'Capital'
-        adv_en = RECOMMENDATIONS.get(top_c, RECOMMENDATIONS['Capital'])['en']
-        pdf_s_bytes = create_bank_risk_pdf(
-            bank_name=selected_bank,
-            year=selected_year,
-            assessment=analysis_s['Assessment'],
-            cat_scores=analysis_s['Category_Scores'],
-            insights=insights_s,
-            advisory=adv_en
-        )
-        st.download_button(
-            label=T['download_single'],
-            data=pdf_s_bytes,
-            file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
 
-st.markdown("---")
+    st.markdown("---")
 
-# Main Content Router
-if nav_mode == T['nav_sector']:
     k1, k2, k3, k4 = st.columns(4)
     total_b = len(comp_df)
     high_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High|عالية', na=False)])
@@ -359,6 +468,7 @@ if nav_mode == T['nav_sector']:
         height=320
     )
 
+# ----------------- VIEW 3: SINGLE BANK DEEP-DIVE -----------------
 else:
     analysis, insights, var_df = get_analysis(df_data, selected_bank, selected_year)
     assessment = analysis['Assessment']
@@ -368,6 +478,31 @@ else:
 
     top_esc_cat = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
     adv_text = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])[lang]
+    adv_en = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])['en']
+
+    col_head, col_btn = st.columns([4, 2])
+    with col_head:
+        st.title(f"🏦 {selected_bank} — {selected_year}")
+        st.caption(f"{T['subtitle']} | Target: {selected_bank}")
+    with col_btn:
+        st.markdown("<br>", unsafe_allow_html=True)
+        pdf_s_bytes = create_bank_risk_pdf(
+            bank_name=selected_bank,
+            year=selected_year,
+            assessment=analysis['Assessment'],
+            cat_scores=analysis['Category_Scores'],
+            insights=insights,
+            advisory=adv_en
+        )
+        st.download_button(
+            label=T['download_single'],
+            data=pdf_s_bytes,
+            file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+    st.markdown("---")
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:

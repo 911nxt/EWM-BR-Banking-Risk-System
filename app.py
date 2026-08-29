@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
@@ -261,16 +262,53 @@ comp_df = get_sector_data(df_data, selected_year, lang=lang)
 
 # ----------------- VIEW 1: EMBEDDED TAILWIND LANDING PAGE -----------------
 if nav_mode == T['nav_landing']:
+    html_lang = 'ar' if lang == 'ar' else 'en'
+    html_dir = 'rtl' if lang == 'ar' else 'ltr'
+    font_family = 'Tajawal' if lang == 'ar' else 'Plus Jakarta Sans'
+
+    h1_title = 'منظومة الاستشراف والإنذار المبكر للمخاطر المصرفية' if lang == 'ar' else 'Early Warning Model for Banks Risk (EWM-BR)'
+    h1_sub = 'تقييم السلامة المصرفية بإطار CAPPELO' if lang == 'ar' else 'CAPPELO Supervisory Intelligence Framework'
+
+    stat1_label = 'بنوك مجهلة تحت الرقابة' if lang == 'ar' else 'Monitored Anonymized Banks'
+    stat2_label = 'محاور CAPPELO التحليلية' if lang == 'ar' else 'CAPPELO Core Dimensions'
+    stat3_label = 'مؤشراً مالياً معيارياً' if lang == 'ar' else 'Standardized Soundness KPIs'
+    stat4_unit = 'يوم' if lang == 'ar' else 'Days'
+    stat4_label = 'أفق استشراف الضغط المالي' if lang == 'ar' else 'Stress Horizon Forecast'
+
+    pillars_title = 'محاور التقييم السبعة لإطار CAPPELO' if lang == 'ar' else 'The 7 CAPPELO Analytical Pillars'
+    pillars_sub = 'نمذجة رياضية متكاملة لتقييم الملاءة المالية وحساسية الأسواق والسيولة' if lang == 'ar' else 'Quantitative econometric framework mapping financial resilience across core banking risk dimensions'
+
+    p1_desc = 'كفاية رأس المال والرافعة المالية ومطابقة بازل 3 لامتصاص الصدمات.' if lang == 'ar' else 'Capital buffer, leverage limits, and risk-weighted asset capacity.'
+    p2_desc = 'جودة المحفظة الائتمانية ورصد القروض غير المنتظمة ومخصصات التعثر.' if lang == 'ar' else 'Non-performing loan ratios, provisioning adequacy, and credit quality.'
+    p3_desc = 'كفاءة تشغيل الأصول وتوظيف الموارد البشرية والتقنية.' if lang == 'ar' else 'Asset utilization efficiency and workforce productivity metrics.'
+    p4_desc = 'العائد على الأصول، هامش الفائدة الصافي، واستدامة الأرباح.' if lang == 'ar' else 'Net Interest Margin, ROA sustainability, and revenue quality.'
+    p5_desc = 'ضبط نسبة التكلفة إلى الدخل وترشيد المصاريف التشغيلية.' if lang == 'ar' else 'Cost-to-income rationalization and overhead burden management.'
+    p6_desc = 'الأصول عالية السيولة واستقرار هيكل التمويل واستحقاق الالتزامات.' if lang == 'ar' else 'High-Quality Liquid Assets and short-term maturity profiles.'
+    p7_desc = 'مراقبة تقلبات أسعار الفائدة والعملات الأجنبية وأدوات التحوط.' if lang == 'ar' else 'Foreign exchange structural exposure and market risk sensitivity gaps.'
+
+    if lang == 'ar':
+        js_sentences = json.dumps([
+            "منصة رقابية متقدمة ترصد الاستقرار المالي عبر إطار CAPPELO المعتمد.",
+            "استخراج فوري للمؤشرات المعيارية لـ 8 بنوك مجهلة لتأكيد الحياد والسرية.",
+            "توليد تقارير PDF تنفيذية وتفسير سببي متقدم للمخاطر."
+        ], ensure_ascii=False)
+    else:
+        js_sentences = json.dumps([
+            "Empirical early warning system assessing banking vulnerability via CAPPELO framework.",
+            "Anonymized 8-bank panel dataset ensuring regulatory objectivity and rigor.",
+            "Automated executive PDF reporting with Explainable AI risk decomposition."
+        ])
+
     html_content = f"""
     <!DOCTYPE html>
-    <html lang="{'ar' if lang == 'ar' else 'en'}" dir="{'rtl' if lang == 'ar' else 'ltr'}">
+    <html lang="{html_lang}" dir="{html_dir}">
     <head>
         <meta charset="UTF-8">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/lucide@latest"></script>
         <style>
-            body {{ font-family: {'"Tajawal"' if lang == 'ar' else '"Plus Jakarta Sans"'}, sans-serif; }}
+            body {{ font-family: '{font_family}', sans-serif; }}
             .glass-card {{
                 background: rgba(15, 23, 42, 0.85);
                 backdrop-filter: blur(16px);
@@ -295,9 +333,9 @@ if nav_mode == T['nav_landing']:
                 </div>
                 
                 <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
-                    {'منظومة الاستشراف والإنذار المبكر للمخاطر المصرفية' if lang == 'ar' else 'Early Warning Model for Banks\' Risk (EWM-BR)'}<br>
+                    {h1_title}<br>
                     <span class="bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                        {'تقييم السلامة المصرفية بإطار CAPPELO' if lang == 'ar' else 'CAPPELO Supervisory Intelligence Framework'}
+                        {h1_sub}
                     </span>
                 </h1>
                 
@@ -310,63 +348,63 @@ if nav_mode == T['nav_landing']:
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                 <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
                     <div class="text-3xl font-extrabold text-sky-400 mb-1">8</div>
-                    <div class="text-xs text-slate-400 font-semibold">{'بنوك مجهلة تحت الرقابة' if lang == 'ar' else 'Monitored Anonymized Banks'}</div>
+                    <div class="text-xs text-slate-400 font-semibold">{stat1_label}</div>
                 </div>
                 <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
                     <div class="text-3xl font-extrabold text-cyan-400 mb-1">7</div>
-                    <div class="text-xs text-slate-400 font-semibold">{'محاور CAPPELO التحليلية' if lang == 'ar' else 'CAPPELO Core Dimensions'}</div>
+                    <div class="text-xs text-slate-400 font-semibold">{stat2_label}</div>
                 </div>
                 <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
                     <div class="text-3xl font-extrabold text-emerald-400 mb-1">144</div>
-                    <div class="text-xs text-slate-400 font-semibold">{'مؤشراً مالياً معيارياً' if lang == 'ar' else 'Standardized Soundness KPIs'}</div>
+                    <div class="text-xs text-slate-400 font-semibold">{stat3_label}</div>
                 </div>
                 <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
-                    <div class="text-3xl font-extrabold text-indigo-400 mb-1">90 {'يوم' if lang == 'ar' else 'Days'}</div>
-                    <div class="text-xs text-slate-400 font-semibold">{'أفق استشراف الضغط المالي' if lang == 'ar' else 'Stress Horizon Forecast'}</div>
+                    <div class="text-3xl font-extrabold text-indigo-400 mb-1">90 {stat4_unit}</div>
+                    <div class="text-xs text-slate-400 font-semibold">{stat4_label}</div>
                 </div>
             </div>
 
             <!-- 7 Pillars Grid -->
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-white mb-2">{'محاور التقييم السبعة لإطار CAPPELO' if lang == 'ar' else 'The 7 CAPPELO Analytical Pillars'}</h2>
-                <p class="text-slate-400 text-xs sm:text-sm">{'نمذجة رياضية متكاملة لتقييم الملاءة المالية وحساسية الأسواق والسيولة' if lang == 'ar' else 'Quantitative econometric framework mapping financial resilience across core banking risk dimensions'}</p>
+                <h2 class="text-2xl font-bold text-white mb-2">{pillars_title}</h2>
+                <p class="text-slate-400 text-xs sm:text-sm">{pillars_sub}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-blue-400 font-bold mb-2">1. Capital Adequacy (C)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'كفاية رأس المال والرافعة المالية ومطابقة بازل 3 لامتصاص الصدمات.' if lang == 'ar' else 'Capital buffer, leverage limits, and risk-weighted asset capacity.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p1_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-red-400 font-bold mb-2">2. Asset Quality (A)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'جودة المحفظة الائتمانية ورصد القروض غير المنتظمة (NPL) والمخصصات.' if lang == 'ar' else 'Non-performing loan ratios, provisioning adequacy, and credit quality.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p2_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-purple-400 font-bold mb-2">3. Productivity (P)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'كفاءة تشغيل الأصول وتوظيف الموارد البشرية والتقنية.' if lang == 'ar' else 'Asset utilization efficiency and workforce productivity metrics.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p3_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-emerald-400 font-bold mb-2">4. Profitability (P)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'العائد على الأصول (ROA)، هامش الفائدة الصافي، واستدامة الأرباح.' if lang == 'ar' else 'Net Interest Margin (NIM), ROA sustainability, and revenue quality.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p4_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-amber-400 font-bold mb-2">5. Efficiency (E)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'ضبط نسبة التكلفة إلى الدخل وترشيد المصاريف التشغيلية.' if lang == 'ar' else 'Cost-to-income rationalization and overhead burden management.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p5_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800">
                     <div class="text-cyan-400 font-bold mb-2">6. Liquidity (L)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'الأصول عالية السيولة واستقرار هيكل التمويل واستحقاق الالتزامات.' if lang == 'ar' else 'High-Quality Liquid Assets (HQLA) and short-term maturity profiles.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p6_desc}</p>
                 </div>
                 <div class="glass-card rounded-xl p-5 border border-slate-800 md:col-span-2 lg:col-span-3">
                     <div class="text-indigo-400 font-bold mb-2">7. Openness & Sensitivity to Market Risk (O)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{'مراقبة تقلبات أسعار الفائدة والعملات الأجنبية وأدوات التحوط.' if lang == 'ar' else 'Foreign exchange structural exposure and market risk sensitivity gaps.'}</p>
+                    <p class="text-slate-400 text-xs leading-relaxed">{p7_desc}</p>
                 </div>
             </div>
         </div>
 
         <script>
             lucide.createIcons();
-            const sentences = {'["منظومة رقابية متقدمة ترصد الاستقرار المالي عبر إطار CAPPELO المعتمد.", "استخراج فوري للمؤشرات المعيارية لـ 8 بنوك مجهلة لتأكيد الحياد والسرية.", "توليد تقارير PDF تنفيذية وتفسير سببي متقدم (XAI) للمخاطر."]' if lang == 'ar' else '["Empirical early warning system assessing banking vulnerability via CAPPELO framework.", "Anonymized 8-bank panel dataset ensuring regulatory objectivity and rigor.", "Automated executive PDF reporting with Explainable AI risk decomposition."]'};
+            const sentences = {js_sentences};
             let sIdx = 0, cIdx = 0, isDel = false;
             const el = document.getElementById("typewriter");
             function type() {{

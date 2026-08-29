@@ -17,12 +17,12 @@ from pdf_generator import create_bank_risk_pdf, create_sector_risk_pdf
 
 st.set_page_config(
     page_title="EWM-BR | Early Warning Banking Risk Intelligence",
-    page_icon="🏛️",
+    page_icon="🏦",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Unified Academic UI Styling
+# Custom Unified Academic UI Styling (Tech Agent Style)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -33,59 +33,75 @@ html, body, [class*="css"] {
 
 .hero-banner {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border-radius: 16px;
-    padding: 32px 28px;
+    border-radius: 20px;
+    padding: 36px 30px;
     color: #ffffff;
     margin-bottom: 24px;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.25);
     border: 1px solid #334155;
+    text-align: center;
 }
 
 .hero-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 14px;
-    background: rgba(37, 99, 235, 0.25);
+    padding: 5px 16px;
+    background: rgba(37, 99, 235, 0.2);
     border: 1px solid rgba(96, 165, 250, 0.4);
     border-radius: 9999px;
     font-size: 12px;
     font-weight: 600;
     color: #93c5fd;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .stat-box {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 18px 16px;
+    border-radius: 16px;
+    padding: 20px 16px;
     text-align: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     transition: all 0.2s ease;
 }
 .stat-box:hover {
-    border-color: #94a3b8;
+    border-color: #3b82f6;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.1);
 }
 
 .pillar-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+}
+.pillar-card:hover {
+    border-color: #93c5fd;
+    transform: translateY(-2px);
 }
 
-.footer-box {
+.footer-container {
+    background: #090d16;
+    border-radius: 20px;
+    padding: 36px 28px;
+    margin-top: 50px;
+    border: 1px solid #1e293b;
+    color: #94a3b8;
     text-align: center;
-    padding: 24px 0;
-    margin-top: 40px;
-    border-top: 1px solid #e2e8f0;
-    color: #64748b;
-    font-size: 13px;
+}
+
+.footer-link {
+    color: #38bdf8;
+    text-decoration: none;
+    font-weight: 600;
+}
+.footer-link:hover {
+    text-decoration: underline;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -96,7 +112,7 @@ I18N = {
         'hero_title': "Early Warning Model for Banks' Risk (EWM-BR)",
         'hero_subtitle': "Empirical Financial Soundness Evaluation based on CAPPELO Framework (Groups 1–7) across 8 Anonymized Banking Institutions.",
         'sec_overview': "🏛️ 1. CAPPELO Framework & Supervisory Foundations",
-        'sec_sector': "📊 2. Banking Sector Macro Risk Assessment",
+        'sec_sector': "📊 2. Banking Sector Macro Risk Assessment (All 8 Banks)",
         'sec_deepdive': "🔍 3. Institutional Deep-Dive Assessment",
         'sec_variance': "📋 4. Indicators Variance Matrix vs. Sector Benchmark",
         'monitored_banks': "Monitored Institutions",
@@ -133,9 +149,9 @@ I18N = {
     'ar': {
         'portal_badge': "المنظومة القياسية والرقابية لتقييم السلامة المصرفية",
         'hero_title': "منظومة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
-        'hero_subtitle': "التقييم والاستشراف الذكي لسلامة المصارف استناداً لمحاور CAPPELO السبعة (المجموعات 1–7) لـ 8 بنوك مجهلة لضمان الحيادية والسرية.",
+        'hero_subtitle': "التقييم والاستشراف الذكي لسلامة المصارف استناداً لمحاور CAPPELO السبعة لـ 8 بنوك مجهلة لضمان الحيادية والسرية.",
         'sec_overview': "🏛️ 1. المرتكزات الرقابية ومحاور نموذج CAPPELO",
-        'sec_sector': "📊 2. التقييم الشامل لدرجات مخاطر القطاع المصرفي",
+        'sec_sector': "📊 2. التقييم الشامل لدرجات مخاطر القطاع المصرفي (كافة البنوك)",
         'sec_deepdive': "🔍 3. التحليل التفصيلي المعمق للمصرف المختار",
         'sec_variance': "📋 4. مصفوفة انحراف المؤشرات المالية عن معيار القطاع",
         'monitored_banks': "المصارف الخاضعة للرقابة",
@@ -272,9 +288,6 @@ with st.sidebar:
     all_years = sorted(df_data['Year'].unique().tolist(), reverse=True)
     selected_year = st.selectbox("Fiscal Year | السنة المالية:", all_years)
 
-    bank_list = sorted(df_data[df_data['Year'] == selected_year]['Bank'].unique().tolist())
-    selected_bank = st.selectbox("Selected Target Bank | المصرف قيد الفحص:", bank_list)
-
     st.markdown("---")
     st.markdown("### 📄 Reports Center")
     comp_df_en = get_sector_data(df_data, selected_year, lang='en')
@@ -287,31 +300,12 @@ with st.sidebar:
         use_container_width=True
     )
 
-    analysis_s, insights_s, _ = get_analysis(df_data, selected_bank, selected_year)
-    top_c = insights_s['Top_Risk_Escalators'][0]['Category'] if insights_s['Top_Risk_Escalators'] else 'Capital'
-    adv_en = RECOMMENDATIONS.get(top_c, RECOMMENDATIONS['Capital'])['en']
-    pdf_single_bytes = create_bank_risk_pdf(
-        bank_name=selected_bank,
-        year=selected_year,
-        assessment=analysis_s['Assessment'],
-        cat_scores=analysis_s['Category_Scores'],
-        insights=insights_s,
-        advisory=adv_en
-    )
-    st.download_button(
-        label=f"{T['download_single']} ({selected_bank})",
-        data=pdf_single_bytes,
-        file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
-
 # ================= HEADER / HERO BANNER =================
 st.markdown(f"""
 <div class="hero-banner">
     <div class="hero-badge">🏛️ {T['portal_badge']}</div>
-    <h1 style="margin: 0; font-size: 28px; font-weight: 800; line-height: 1.3;">{T['hero_title']}</h1>
-    <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 14px; max-width: 900px; line-height: 1.6;">
+    <h1 style="margin: 0; font-size: 32px; font-weight: 800; line-height: 1.3;">{T['hero_title']}</h1>
+    <p style="margin: 10px auto 0 auto; color: #94a3b8; font-size: 15px; max-width: 900px; line-height: 1.6;">
         {T['hero_subtitle']}
     </p>
 </div>
@@ -320,18 +314,18 @@ st.markdown(f"""
 # Top Stat Summary Cards
 c_s1, c_s2, c_s3, c_s4 = st.columns(4)
 with c_s1:
-    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["monitored_banks"]}</div><div style="font-size:24px; font-weight:800; color:#0f172a; margin-top:4px;">8 Banks</div><div style="font-size:11px; color:#94a3b8;">Anonymized (A–H)</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["monitored_banks"]}</div><div style="font-size:26px; font-weight:800; color:#0f172a; margin-top:4px;">8 Banks</div><div style="font-size:11px; color:#94a3b8;">Anonymized (A–H)</div></div>', unsafe_allow_html=True)
 with c_s2:
-    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["cappelo_pillars"]}</div><div style="font-size:24px; font-weight:800; color:#2563eb; margin-top:4px;">7 Pillars</div><div style="font-size:11px; color:#94a3b8;">Groups 1–7</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["cappelo_pillars"]}</div><div style="font-size:26px; font-weight:800; color:#2563eb; margin-top:4px;">7 Pillars</div><div style="font-size:11px; color:#94a3b8;">Groups 1–7</div></div>', unsafe_allow_html=True)
 with c_s3:
-    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["kpis_count"]}</div><div style="font-size:24px; font-weight:800; color:#10b981; margin-top:4px;">144 KPIs</div><div style="font-size:11px; color:#94a3b8;">Standard Norms</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["kpis_count"]}</div><div style="font-size:26px; font-weight:800; color:#10b981; margin-top:4px;">144 KPIs</div><div style="font-size:11px; color:#94a3b8;">Standard Norms</div></div>', unsafe_allow_html=True)
 with c_s4:
-    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["stress_horizon"]}</div><div style="font-size:24px; font-weight:800; color:#6366f1; margin-top:4px;">90 Days</div><div style="font-size:11px; color:#94a3b8;">Quarterly Stress Prob.</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["stress_horizon"]}</div><div style="font-size:26px; font-weight:800; color:#6366f1; margin-top:4px;">90 Days</div><div style="font-size:11px; color:#94a3b8;">Quarterly Stress Prob.</div></div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ================= SECTION 1: CAPPELO PILLARS OVERVIEW =================
-with st.expander(T['sec_overview'], expanded=True):
+with st.expander(T['sec_overview'], expanded=False):
     col_p1, col_p2, col_p3 = st.columns(3)
     with col_p1:
         st.markdown(f"""
@@ -381,7 +375,7 @@ with st.expander(T['sec_overview'], expanded=True):
 
 st.markdown("---")
 
-# ================= SECTION 2: MACRO SECTOR ASSESSMENT =================
+# ================= SECTION 2: MACRO SECTOR ASSESSMENT (ALL 8 BANKS) =================
 st.subheader(T['sec_sector'])
 comp_df = get_sector_data(df_data, selected_year, lang=lang)
 
@@ -451,9 +445,14 @@ with col_table:
 st.markdown("---")
 
 # ================= SECTION 3: INSTITUTIONAL DEEP-DIVE =================
-st.subheader(f"{T['sec_deepdive']} — {selected_bank} ({selected_year})")
+bank_list = sorted(df_data[df_data['Year'] == selected_year]['Bank'].unique().tolist())
+col_title, col_picker, col_pdf_btn = st.columns([3, 2, 2])
+with col_title:
+    st.subheader(T['sec_deepdive'])
+with col_picker:
+    target_bank = st.selectbox("Select Target Bank | اختر المصرف:", bank_list, key="target_bank_select")
 
-analysis, insights, var_df = get_analysis(df_data, selected_bank, selected_year)
+analysis, insights, var_df = get_analysis(df_data, target_bank, selected_year)
 assessment = analysis['Assessment']
 cat_scores = analysis['Category_Scores']
 raw_status = assessment['Status']
@@ -461,10 +460,29 @@ st_text = STATUS_MAP.get(raw_status, {}).get(lang, raw_status)
 
 top_esc_cat = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
 adv_text = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])[lang]
+adv_en = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])['en']
+
+with col_pdf_btn:
+    st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
+    pdf_single_bytes = create_bank_risk_pdf(
+        bank_name=target_bank,
+        year=selected_year,
+        assessment=analysis['Assessment'],
+        cat_scores=analysis['Category_Scores'],
+        insights=insights,
+        advisory=adv_en
+    )
+    st.download_button(
+        label=f"{T['download_single']} ({target_bank})",
+        data=pdf_single_bytes,
+        file_name=f"EWM_BR_{target_bank}_{selected_year}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
 
 c_d1, c_d2, c_d3, c_d4 = st.columns(4)
 with c_d1:
-    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{selected_bank}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{selected_year}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{target_bank}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{selected_year}</div></div>', unsafe_allow_html=True)
 with c_d2:
     st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["risk_score"]}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{assessment["Risk_Score"]} / 100</div></div>', unsafe_allow_html=True)
 with c_d3:
@@ -490,7 +508,7 @@ with col_radar:
     norm_values = [40, 35, 30, 35, 30, 35, 30]
 
     fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name=selected_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
+    fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name=target_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
     fig_radar.add_trace(go.Scatterpolar(r=norm_values + [norm_values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name='Sector Benchmark', line_color='#94a3b8', line_dash='dash', fillcolor='rgba(148, 163, 184, 0.15)'))
     fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=True, height=350, margin=dict(l=20, r=20, t=20, b=20))
     st.plotly_chart(fig_radar, use_container_width=True)
@@ -501,7 +519,7 @@ with col_gauge:
         mode="gauge+number",
         value=assessment['Risk_Score'],
         domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': f"{selected_bank} Composite Index", 'font': {'size': 13}},
+        title={'text': f"{target_bank} Composite Index", 'font': {'size': 13}},
         gauge={
             'axis': {'range': [0, 100]},
             'bar': {'color': assessment['Color']},
@@ -548,13 +566,13 @@ if search_q:
 
 clean_var_df = clean_var_df.rename(columns={
     'Indicator': 'Indicator / KPI Name' if lang == 'en' else 'اسم المؤشر المالي',
-    'Bank_Value': f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}',
+    'Bank_Value': f'{target_bank} Value' if lang == 'en' else f'قيمة {target_bank}',
     'Industry_Norm': 'Sector Benchmark' if lang == 'en' else 'معيار القطاع',
     'Absolute_Diff': 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق',
     'Variance_Pct': 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
 })
 
-val_col = f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}'
+val_col = f'{target_bank} Value' if lang == 'en' else f'قيمة {target_bank}'
 norm_col = 'Sector Benchmark' if lang == 'en' else 'معيار القطاع'
 diff_col = 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق'
 pct_col = 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
@@ -570,10 +588,24 @@ st.dataframe(
     height=360
 )
 
-# ================= ACADEMIC FOOTER =================
+# ================= ACADEMIC FOOTER (TECH AGENT STYLE) =================
 st.markdown("""
-<div class="footer-box">
-    <b>Early Warning Model for Banks' Risk (EWM-BR)</b> — CAPPELO Empirical Framework<br>
-    Academic & Supervisory Intelligence Platform © 2026. All Rights Reserved.
+<div class="footer-container">
+    <div style="font-size:18px; font-weight:800; color:#ffffff; letter-spacing:0.05em; margin-bottom:6px;">
+        EWM-BR <span style="color:#38bdf8;">SYSTEM</span>
+    </div>
+    <p style="font-size:13px; max-width:600px; margin:0 auto 16px auto; line-height:1.6; color:#94a3b8;">
+        Early Warning Model for Banks' Risk — CAPPELO Supervisory Intelligence Platform.<br>
+        Empowering Financial Stability & Prudential Risk Forecasting.
+    </p>
+    <div style="font-size:12px; border-top:1px solid #1e293b; padding-top:16px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <span>© 2026 EWM-BR Platform. All rights reserved.</span>
+        <div dir="rtl" style="font-size:12px; color:#94a3b8;">
+            صنع بحب ❤️ بواسطة 
+            <a href="https://www.linkedin.com/in/abdulrahman-r-alnammoura/" target="_blank" class="footer-link" dir="ltr">
+                Abdulrahman R. Alnammoura
+            </a>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)

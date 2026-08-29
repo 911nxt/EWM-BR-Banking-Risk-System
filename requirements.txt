@@ -6,3 +6,7 @@ openpyxl
 scikit-learn
 matplotlib
 reportlab
+<<<<<<< HEAD
+=======
+scipy
+>>>>>>> ff588b1 (Update CAPPELO models and anonymous bank view)

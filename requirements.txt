@@ -1,12 +1,6 @@
 streamlit
 pandas
 numpy
-plotly
 openpyxl
-scikit-learn
-matplotlib
+plotly
 reportlab
-<<<<<<< HEAD
-=======
-scipy
->>>>>>> ff588b1 (Update CAPPELO models and anonymous bank view)

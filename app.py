@@ -23,15 +23,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@media print {
-    section[data-testid="stSidebar"], .stDeployButton, footer, header, #MainMenu {
-        display: none !important;
-    }
-    .main .block-container {
-        max-width: 100% !important;
-        padding: 0.5rem !important;
-    }
-}
 .stat-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
@@ -97,7 +88,7 @@ def get_all_banks_comparison(df, year):
 
 df_data = get_cached_dataset()
 
-# Sidebar Setup
+# Sidebar Navigation
 with st.sidebar:
     st.title("⚙️ Supervisory Panel")
     all_years = sorted(df_data['Year'].unique().tolist(), reverse=True)
@@ -118,65 +109,47 @@ with st.sidebar:
 
 comp_df = get_all_banks_comparison(df_data, selected_year)
 
-# PDF Generation in Sidebar
-with st.sidebar:
-    st.markdown("---")
-    st.subheader("📄 Executive PDF Export")
-    
+# Top Header with Direct PDF Download Button
+col_header, col_action = st.columns([4, 2])
+with col_header:
+    st.title("🏦 Early Warning System (EWM-BR)")
+    st.caption(f"CAPPELO Framework Core Empirical Analysis | Year: {selected_year}")
+
+with col_action:
+    st.markdown("<br>", unsafe_allow_html=True)
     if view_selection == "🏢 All-Banks Sector Overview (Default)":
-        if st.button("📑 Generate All-Banks PDF Report", use_container_width=True):
-            with st.spinner("Generating Sector PDF..."):
-                pdf_sector_bytes = create_sector_risk_pdf(comp_df, selected_year)
-                st.session_state['sector_pdf'] = pdf_sector_bytes
-                
-        if 'sector_pdf' in st.session_state:
-            st.download_button(
-                label="📥 Download Sector PDF Report",
-                data=st.session_state['sector_pdf'],
-                file_name=f"EWM_BR_Sector_Report_{selected_year}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+        sector_pdf_bytes = create_sector_risk_pdf(comp_df, selected_year)
+        st.download_button(
+            label="📄 Download All-Banks PDF Report",
+            data=sector_pdf_bytes,
+            file_name=f"EWM_BR_Sector_Report_{selected_year}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
     else:
         analysis_single, insights_single, _ = get_cached_analysis(df_data, selected_bank, selected_year)
         top_cat = insights_single['Top_Risk_Escalators'][0]['Category'] if insights_single['Top_Risk_Escalators'] else 'Capital'
         adv = RECOMMENDATIONS_MAP.get(top_cat, RECOMMENDATIONS_MAP['Capital'])
-        
-        if st.button(f"📄 Generate {selected_bank} PDF", use_container_width=True):
-            with st.spinner("Compiling PDF..."):
-                pdf_single_bytes = create_bank_risk_pdf(
-                    bank_name=selected_bank,
-                    year=selected_year,
-                    assessment=analysis_single['Assessment'],
-                    cat_scores=analysis_single['Category_Scores'],
-                    insights=insights_single,
-                    advisory=adv
-                )
-                st.session_state['single_pdf'] = pdf_single_bytes
-                
-        if 'single_pdf' in st.session_state:
-            st.download_button(
-                label=f"📥 Download {selected_bank} PDF",
-                data=st.session_state['single_pdf'],
-                file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-
-# Top Header
-col_header, col_print = st.columns([5, 1])
-with col_header:
-    st.title("🏦 Early Warning System for Banking Risk (EWM-BR)")
-    st.caption(f"CAPPELO Framework Core Empirical Analysis (Groups 1–7) | Monitored Sector: {len(bank_list)} Banks | Year: {selected_year}")
-with col_print:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.button("🖨️ Print Screen", use_container_width=True)
+        single_pdf_bytes = create_bank_risk_pdf(
+            bank_name=selected_bank,
+            year=selected_year,
+            assessment=analysis_single['Assessment'],
+            cat_scores=analysis_single['Category_Scores'],
+            insights=insights_single,
+            advisory=adv
+        )
+        st.download_button(
+            label=f"📄 Download {selected_bank} PDF",
+            data=single_pdf_bytes,
+            file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
 st.markdown("---")
 
-# Main Content Routing
+# Main Page Routing
 if view_selection == "🏢 All-Banks Sector Overview (Default)":
-    # Sector High-Level KPI Cards
     k1, k2, k3, k4 = st.columns(4)
     total_banks = len(comp_df)
     high_risk_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High Risk', na=False)])
@@ -194,7 +167,6 @@ if view_selection == "🏢 All-Banks Sector Overview (Default)":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Sector Distribution Chart
     st.subheader(f"📊 Banking Sector Composite Risk Ranking ({selected_year})")
     fig_bar = px.bar(
         comp_df,
@@ -210,7 +182,6 @@ if view_selection == "🏢 All-Banks Sector Overview (Default)":
     fig_bar.update_layout(height=380, margin=dict(t=25, b=25))
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    # All-Banks Master Table
     st.subheader("📋 Cross-Institutional Comparative Matrix (All 8 Banks)")
     st.dataframe(
         comp_df.style.format({
@@ -229,12 +200,11 @@ if view_selection == "🏢 All-Banks Sector Overview (Default)":
     )
 
 else:
-    # Single Bank View
     analysis, insights, var_df = get_cached_analysis(df_data, selected_bank, selected_year)
     assessment = analysis['Assessment']
     cat_scores = analysis['Category_Scores']
     top_esc = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
-    advisory_text = RECOMMENDATIONS_MAP.get(top_esc, RECOMMENDATIONS_MAP['Capital'])
+    advisory_text = RECOMMENDATIONS_MAP.get(top_cat, RECOMMENDATIONS_MAP['Capital'])
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:

@@ -1,9 +1,7 @@
 import os
 import sys
 import re
-import json
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -18,78 +16,105 @@ from xai_explainer import explain_bank_risk_factors
 from pdf_generator import create_bank_risk_pdf, create_sector_risk_pdf
 
 st.set_page_config(
-    page_title="EWM-BR | Banking Risk Intelligence Platform",
-    page_icon="🏦",
+    page_title="EWM-BR | Early Warning Banking Risk Intelligence",
+    page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS Styling
+# Custom Unified Academic UI Styling
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
 }
 
-.kpi-card {
+.hero-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 16px;
+    padding: 32px 28px;
+    color: #ffffff;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+    border: 1px solid #334155;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    background: rgba(37, 99, 235, 0.25);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #93c5fd;
+    margin-bottom: 12px;
+}
+
+.stat-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+}
+.stat-box:hover {
+    border-color: #94a3b8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.pillar-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease-in-out;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
-.kpi-card:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-}
-.kpi-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+
+.footer-box {
+    text-align: center;
+    padding: 24px 0;
+    margin-top: 40px;
+    border-top: 1px solid #e2e8f0;
     color: #64748b;
-    margin-bottom: 6px;
-}
-.kpi-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-}
-.kpi-sub {
-    font-size: 12px;
-    color: #94a3b8;
-    margin-top: 4px;
+    font-size: 13px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 I18N = {
     'en': {
-        'title': "🏦 Early Warning System for Banking Risk (EWM-BR)",
-        'subtitle': "Predictive Financial Soundness Evaluation based on CAPPELO Framework (Groups 1–7)",
-        'nav_landing': "🏠 Platform Overview & CAPPELO Architecture",
-        'nav_sector': "🏢 Cross-Sector Master View",
-        'nav_single': "🔍 Single Institution Assessment",
-        'total_banks': "Monitored Institutions",
+        'portal_badge': "Regulatory & Empirical Supervisory Framework",
+        'hero_title': "Early Warning Model for Banks' Risk (EWM-BR)",
+        'hero_subtitle': "Empirical Financial Soundness Evaluation based on CAPPELO Framework (Groups 1–7) across 8 Anonymized Banking Institutions.",
+        'sec_overview': "🏛️ 1. CAPPELO Framework & Supervisory Foundations",
+        'sec_sector': "📊 2. Banking Sector Macro Risk Assessment",
+        'sec_deepdive': "🔍 3. Institutional Deep-Dive Assessment",
+        'sec_variance': "📋 4. Indicators Variance Matrix vs. Sector Benchmark",
+        'monitored_banks': "Monitored Institutions",
+        'cappelo_pillars': "CAPPELO Dimensions",
+        'kpis_count': "Standardized KPIs",
+        'stress_horizon': "Stress Forecast Horizon",
         'high_risk': "High Risk Exposure",
         'watch_warning': "Watch / Early Warning",
         'stable': "Stable Soundness",
-        'sec_ranking': "📊 Banking Sector Composite Risk Distribution",
-        'sec_matrix': "📋 Cross-Institutional Soundness Matrix (All Monitored Banks)",
-        'target_bank': "Target Institution",
         'risk_score': "Overall Risk Score",
         'stress_prob': "90-Day Stress Probability",
         'supervisory_status': "Supervisory Classification",
         'radar_title': "🎯 CAPPELO Multidimensional Risk Profile",
-        'gauge_title': "⏱️ Composite Risk Index Gauge",
+        'gauge_title': "⏱️ Composite Risk Gauge",
         'xai_title': "🔍 Explainable AI (XAI) Risk Decomposition",
         'escalators': "🚨 Key Risk Escalators (Increasing Vulnerability)",
         'mitigators': "🛡️ Key Risk Mitigators (Safety Buffers)",
-        'advisory_title': "💡 Supervisory Action Directive:",
-        'variance_title': "📋 Core Indicators Variance Matrix vs. Sector Benchmark",
+        'advisory_title': "💡 Supervisory Directive & Recommendation:",
         'search': "Search KPI / Indicator Name:",
         'download_sector': "📄 Download Master Sector PDF",
         'download_single': "📄 Download Institution PDF",
@@ -106,29 +131,30 @@ I18N = {
         'col_opn': "Openness (O)"
     },
     'ar': {
-        'title': "🏦 منصة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
-        'subtitle': "التقييم والاستشراف الذكي لسلامة البنوك استناداً لمحاور CAPPELO السبعة (Groups 1–7)",
-        'nav_landing': "🏠 التعريف بالمنصة ومحاور CAPPELO",
-        'nav_sector': "🏢 الشاشة الشاملة للقطاع المصرفي",
-        'nav_single': "🔍 التحليل التفصيلي لمصرف فردي",
-        'total_banks': "المصارف الخاضعة للرقابة",
+        'portal_badge': "المنظومة القياسية والرقابية لتقييم السلامة المصرفية",
+        'hero_title': "منظومة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
+        'hero_subtitle': "التقييم والاستشراف الذكي لسلامة المصارف استناداً لمحاور CAPPELO السبعة (المجموعات 1–7) لـ 8 بنوك مجهلة لضمان الحيادية والسرية.",
+        'sec_overview': "🏛️ 1. المرتكزات الرقابية ومحاور نموذج CAPPELO",
+        'sec_sector': "📊 2. التقييم الشامل لدرجات مخاطر القطاع المصرفي",
+        'sec_deepdive': "🔍 3. التحليل التفصيلي المعمق للمصرف المختار",
+        'sec_variance': "📋 4. مصفوفة انحراف المؤشرات المالية عن معيار القطاع",
+        'monitored_banks': "المصارف الخاضعة للرقابة",
+        'cappelo_pillars': "محاور CAPPELO التحليلية",
+        'kpis_count': "مؤشراً مالياً معيارياً",
+        'stress_horizon': "أفق التنبؤ بالضغط المالي",
         'high_risk': "مؤسسات عالية المخاطر",
         'watch_warning': "مؤسسات قيد المراقبة / إنذار",
         'stable': "مؤسسات مستقرة",
-        'sec_ranking': "📊 توزيع وترتيب مؤشرات المخاطر للقطاع المصرفي",
-        'sec_matrix': "📋 مصفوفة السلامة المالية المقارنة لكافة البنوك",
-        'target_bank': "المصرف الخاضع للتقييم",
         'risk_score': "درجة المخاطر المركبة",
         'stress_prob': "احتمالية الضغط المالي (90 يوماً)",
         'supervisory_status': "التصنيف الرقابي",
         'radar_title': "🎯 رادار أبعاد السلامة المصرفية (CAPPELO)",
-        'gauge_title': "⏱️ عداد مؤشر المخاطر التراكمي",
+        'gauge_title': "⏱️ مقياس مؤشر المخاطر التراكمي",
         'xai_title': "🔍 التفسير السببي وتفكيك محركات الخطر (XAI)",
         'escalators': "🚨 المحاور الأكثر رفعاً للمخاطر",
         'mitigators': "🛡️ محركات الأمان وتخفيف المخاطر",
-        'advisory_title': "💡 التوجيه والتوصية الرقابية:",
-        'variance_title': "📋 مصفوفة انحراف المؤشرات التفصيلية عن معيار الصناعة",
-        'search': "بحث في المؤشرات المالية:",
+        'advisory_title': "💡 التوجيه والتوصية الرقابية المقترحة:",
+        'search': "بحث سريع في المؤشرات المالية:",
         'download_sector': "📄 تحميل تقرير القطاع الشامل (PDF)",
         'download_single': "📄 تحميل تقرير المصرف (PDF)",
         'col_bank': "المصرف",
@@ -235,9 +261,9 @@ def get_sector_data(df, year, lang='en'):
 
 df_data = get_dataset()
 
-# Sidebar Navigation
+# ================= SIDEBAR CONTROLS =================
 with st.sidebar:
-    st.markdown("### ⚙️ Platform Navigation")
+    st.markdown("### ⚙️ Supervisory Controls")
     enable_arabic = st.toggle("🌐 إظهار الواجهة باللغة العربية (Arabic)", value=False)
     lang = 'ar' if enable_arabic else 'en'
     T = I18N[lang]
@@ -246,221 +272,138 @@ with st.sidebar:
     all_years = sorted(df_data['Year'].unique().tolist(), reverse=True)
     selected_year = st.selectbox("Fiscal Year | السنة المالية:", all_years)
 
-    nav_mode = st.radio(
-        "Navigation Mode | نمط العرض:",
-        [T['nav_landing'], T['nav_sector'], T['nav_single']],
-        index=0
-    )
-
     bank_list = sorted(df_data[df_data['Year'] == selected_year]['Bank'].unique().tolist())
-    if nav_mode == T['nav_single']:
-        selected_bank = st.selectbox("Select Target Bank | المصرف الخاضع للتقييم:", bank_list)
-    else:
-        selected_bank = bank_list[0]
-
-comp_df = get_sector_data(df_data, selected_year, lang=lang)
-
-# ----------------- VIEW 1: EMBEDDED TAILWIND LANDING PAGE -----------------
-if nav_mode == T['nav_landing']:
-    html_lang = 'ar' if lang == 'ar' else 'en'
-    html_dir = 'rtl' if lang == 'ar' else 'ltr'
-    font_family = 'Tajawal' if lang == 'ar' else 'Plus Jakarta Sans'
-
-    h1_title = 'منظومة الاستشراف والإنذار المبكر للمخاطر المصرفية' if lang == 'ar' else 'Early Warning Model for Banks Risk (EWM-BR)'
-    h1_sub = 'تقييم السلامة المصرفية بإطار CAPPELO' if lang == 'ar' else 'CAPPELO Supervisory Intelligence Framework'
-
-    stat1_label = 'بنوك مجهلة تحت الرقابة' if lang == 'ar' else 'Monitored Anonymized Banks'
-    stat2_label = 'محاور CAPPELO التحليلية' if lang == 'ar' else 'CAPPELO Core Dimensions'
-    stat3_label = 'مؤشراً مالياً معيارياً' if lang == 'ar' else 'Standardized Soundness KPIs'
-    stat4_unit = 'يوم' if lang == 'ar' else 'Days'
-    stat4_label = 'أفق استشراف الضغط المالي' if lang == 'ar' else 'Stress Horizon Forecast'
-
-    pillars_title = 'محاور التقييم السبعة لإطار CAPPELO' if lang == 'ar' else 'The 7 CAPPELO Analytical Pillars'
-    pillars_sub = 'نمذجة رياضية متكاملة لتقييم الملاءة المالية وحساسية الأسواق والسيولة' if lang == 'ar' else 'Quantitative econometric framework mapping financial resilience across core banking risk dimensions'
-
-    p1_desc = 'كفاية رأس المال والرافعة المالية ومطابقة بازل 3 لامتصاص الصدمات.' if lang == 'ar' else 'Capital buffer, leverage limits, and risk-weighted asset capacity.'
-    p2_desc = 'جودة المحفظة الائتمانية ورصد القروض غير المنتظمة ومخصصات التعثر.' if lang == 'ar' else 'Non-performing loan ratios, provisioning adequacy, and credit quality.'
-    p3_desc = 'كفاءة تشغيل الأصول وتوظيف الموارد البشرية والتقنية.' if lang == 'ar' else 'Asset utilization efficiency and workforce productivity metrics.'
-    p4_desc = 'العائد على الأصول، هامش الفائدة الصافي، واستدامة الأرباح.' if lang == 'ar' else 'Net Interest Margin, ROA sustainability, and revenue quality.'
-    p5_desc = 'ضبط نسبة التكلفة إلى الدخل وترشيد المصاريف التشغيلية.' if lang == 'ar' else 'Cost-to-income rationalization and overhead burden management.'
-    p6_desc = 'الأصول عالية السيولة واستقرار هيكل التمويل واستحقاق الالتزامات.' if lang == 'ar' else 'High-Quality Liquid Assets and short-term maturity profiles.'
-    p7_desc = 'مراقبة تقلبات أسعار الفائدة والعملات الأجنبية وأدوات التحوط.' if lang == 'ar' else 'Foreign exchange structural exposure and market risk sensitivity gaps.'
-
-    if lang == 'ar':
-        js_sentences = json.dumps([
-            "منصة رقابية متقدمة ترصد الاستقرار المالي عبر إطار CAPPELO المعتمد.",
-            "استخراج فوري للمؤشرات المعيارية لـ 8 بنوك مجهلة لتأكيد الحياد والسرية.",
-            "توليد تقارير PDF تنفيذية وتفسير سببي متقدم للمخاطر."
-        ], ensure_ascii=False)
-    else:
-        js_sentences = json.dumps([
-            "Empirical early warning system assessing banking vulnerability via CAPPELO framework.",
-            "Anonymized 8-bank panel dataset ensuring regulatory objectivity and rigor.",
-            "Automated executive PDF reporting with Explainable AI risk decomposition."
-        ])
-
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="{html_lang}" dir="{html_dir}">
-    <head>
-        <meta charset="UTF-8">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <style>
-            body {{ font-family: '{font_family}', sans-serif; }}
-            .glass-card {{
-                background: rgba(15, 23, 42, 0.85);
-                backdrop-filter: blur(16px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }}
-            .typewriter-cursor {{
-                display: inline-block;
-                width: 3px;
-                background-color: #38bdf8;
-                animation: blink 0.8s infinite;
-            }}
-            @keyframes blink {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0; }} }}
-        </style>
-    </head>
-    <body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-8">
-        <div class="max-w-6xl mx-auto">
-            <!-- Header Badge -->
-            <div class="text-center pt-4 pb-6">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-blue-500/30 text-sky-400 text-xs sm:text-sm font-semibold mb-6">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>CAPPELO Framework Core Empirical Analysis (2023–2024)</span>
-                </div>
-                
-                <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
-                    {h1_title}<br>
-                    <span class="bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                        {h1_sub}
-                    </span>
-                </h1>
-                
-                <div class="min-h-[60px] text-base sm:text-lg text-slate-300 max-w-3xl mx-auto mb-8 font-medium">
-                    <span id="typewriter"></span><span class="typewriter-cursor">&nbsp;</span>
-                </div>
-            </div>
-
-            <!-- Key Metric Numbers -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
-                    <div class="text-3xl font-extrabold text-sky-400 mb-1">8</div>
-                    <div class="text-xs text-slate-400 font-semibold">{stat1_label}</div>
-                </div>
-                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
-                    <div class="text-3xl font-extrabold text-cyan-400 mb-1">7</div>
-                    <div class="text-xs text-slate-400 font-semibold">{stat2_label}</div>
-                </div>
-                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
-                    <div class="text-3xl font-extrabold text-emerald-400 mb-1">144</div>
-                    <div class="text-xs text-slate-400 font-semibold">{stat3_label}</div>
-                </div>
-                <div class="glass-card rounded-2xl p-5 text-center border border-slate-800">
-                    <div class="text-3xl font-extrabold text-indigo-400 mb-1">90 {stat4_unit}</div>
-                    <div class="text-xs text-slate-400 font-semibold">{stat4_label}</div>
-                </div>
-            </div>
-
-            <!-- 7 Pillars Grid -->
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-white mb-2">{pillars_title}</h2>
-                <p class="text-slate-400 text-xs sm:text-sm">{pillars_sub}</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-blue-400 font-bold mb-2">1. Capital Adequacy (C)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p1_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-red-400 font-bold mb-2">2. Asset Quality (A)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p2_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-purple-400 font-bold mb-2">3. Productivity (P)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p3_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-emerald-400 font-bold mb-2">4. Profitability (P)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p4_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-amber-400 font-bold mb-2">5. Efficiency (E)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p5_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800">
-                    <div class="text-cyan-400 font-bold mb-2">6. Liquidity (L)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p6_desc}</p>
-                </div>
-                <div class="glass-card rounded-xl p-5 border border-slate-800 md:col-span-2 lg:col-span-3">
-                    <div class="text-indigo-400 font-bold mb-2">7. Openness & Sensitivity to Market Risk (O)</div>
-                    <p class="text-slate-400 text-xs leading-relaxed">{p7_desc}</p>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            lucide.createIcons();
-            const sentences = {js_sentences};
-            let sIdx = 0, cIdx = 0, isDel = false;
-            const el = document.getElementById("typewriter");
-            function type() {{
-                const cur = sentences[sIdx];
-                el.textContent = isDel ? cur.substring(0, cIdx - 1) : cur.substring(0, cIdx + 1);
-                cIdx = isDel ? cIdx - 1 : cIdx + 1;
-                let t = isDel ? 20 : 35;
-                if (!isDel && cIdx === cur.length) {{ isDel = true; t = 2200; }}
-                else if (isDel && cIdx === 0) {{ isDel = false; sIdx = (sIdx + 1) % sentences.length; t = 400; }}
-                setTimeout(type, t);
-            }}
-            document.addEventListener("DOMContentLoaded", type);
-        </script>
-    </body>
-    </html>
-    """
-    components.html(html_content, height=880, scrolling=True)
-
-# ----------------- VIEW 2: CROSS-SECTOR MASTER DASHBOARD -----------------
-elif nav_mode == T['nav_sector']:
-    col_head, col_btn = st.columns([4, 2])
-    with col_head:
-        st.title(T['title'])
-        st.caption(f"{T['subtitle']} | Fiscal Year: {selected_year}")
-    with col_btn:
-        st.markdown("<br>", unsafe_allow_html=True)
-        comp_df_en = get_sector_data(df_data, selected_year, lang='en')
-        pdf_bytes = create_sector_risk_pdf(comp_df_en, selected_year)
-        st.download_button(
-            label=T['download_sector'],
-            data=pdf_bytes,
-            file_name=f"EWM_BR_Sector_Report_{selected_year}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+    selected_bank = st.selectbox("Selected Target Bank | المصرف قيد الفحص:", bank_list)
 
     st.markdown("---")
+    st.markdown("### 📄 Reports Center")
+    comp_df_en = get_sector_data(df_data, selected_year, lang='en')
+    pdf_sector_bytes = create_sector_risk_pdf(comp_df_en, selected_year)
+    st.download_button(
+        label=T['download_sector'],
+        data=pdf_sector_bytes,
+        file_name=f"EWM_BR_Sector_Report_{selected_year}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
 
-    k1, k2, k3, k4 = st.columns(4)
-    total_b = len(comp_df)
-    high_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High|عالية', na=False)])
-    watch_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Watch|Early|مراقبة|إنذار', na=False)])
-    stable_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Stable|مستقر', na=False)])
+    analysis_s, insights_s, _ = get_analysis(df_data, selected_bank, selected_year)
+    top_c = insights_s['Top_Risk_Escalators'][0]['Category'] if insights_s['Top_Risk_Escalators'] else 'Capital'
+    adv_en = RECOMMENDATIONS.get(top_c, RECOMMENDATIONS['Capital'])['en']
+    pdf_single_bytes = create_bank_risk_pdf(
+        bank_name=selected_bank,
+        year=selected_year,
+        assessment=analysis_s['Assessment'],
+        cat_scores=analysis_s['Category_Scores'],
+        insights=insights_s,
+        advisory=adv_en
+    )
+    st.download_button(
+        label=f"{T['download_single']} ({selected_bank})",
+        data=pdf_single_bytes,
+        file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
 
-    with k1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["total_banks"]}</div><div class="kpi-value">{total_b} Banks</div><div class="kpi-sub">Coverage: 100%</div></div>', unsafe_allow_html=True)
-    with k2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["high_risk"]}</div><div class="kpi-value" style="color:#ef4444;">{high_n}</div><div class="kpi-sub">Critical Alert</div></div>', unsafe_allow_html=True)
-    with k3:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["watch_warning"]}</div><div class="kpi-value" style="color:#f59e0b;">{watch_n}</div><div class="kpi-sub">Heightened Vigilance</div></div>', unsafe_allow_html=True)
-    with k4:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["stable"]}</div><div class="kpi-value" style="color:#10b981;">{stable_n}</div><div class="kpi-sub">Within Safety Norm</div></div>', unsafe_allow_html=True)
+# ================= HEADER / HERO BANNER =================
+st.markdown(f"""
+<div class="hero-banner">
+    <div class="hero-badge">🏛️ {T['portal_badge']}</div>
+    <h1 style="margin: 0; font-size: 28px; font-weight: 800; line-height: 1.3;">{T['hero_title']}</h1>
+    <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 14px; max-width: 900px; line-height: 1.6;">
+        {T['hero_subtitle']}
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+# Top Stat Summary Cards
+c_s1, c_s2, c_s3, c_s4 = st.columns(4)
+with c_s1:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["monitored_banks"]}</div><div style="font-size:24px; font-weight:800; color:#0f172a; margin-top:4px;">8 Banks</div><div style="font-size:11px; color:#94a3b8;">Anonymized (A–H)</div></div>', unsafe_allow_html=True)
+with c_s2:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["cappelo_pillars"]}</div><div style="font-size:24px; font-weight:800; color:#2563eb; margin-top:4px;">7 Pillars</div><div style="font-size:11px; color:#94a3b8;">Groups 1–7</div></div>', unsafe_allow_html=True)
+with c_s3:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["kpis_count"]}</div><div style="font-size:24px; font-weight:800; color:#10b981; margin-top:4px;">144 KPIs</div><div style="font-size:11px; color:#94a3b8;">Standard Norms</div></div>', unsafe_allow_html=True)
+with c_s4:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">{T["stress_horizon"]}</div><div style="font-size:24px; font-weight:800; color:#6366f1; margin-top:4px;">90 Days</div><div style="font-size:11px; color:#94a3b8;">Quarterly Stress Prob.</div></div>', unsafe_allow_html=True)
 
-    st.subheader(T['sec_ranking'])
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ================= SECTION 1: CAPPELO PILLARS OVERVIEW =================
+with st.expander(T['sec_overview'], expanded=True):
+    col_p1, col_p2, col_p3 = st.columns(3)
+    with col_p1:
+        st.markdown(f"""
+        <div class="pillar-card">
+            <b style="color:#2563eb;">1. Capital Adequacy (C)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'كفاية رأس المال والرافعة المالية ومطابقة بازل 3 لامتصاص الصدمات.' if lang=='ar' else 'Capital buffer, leverage limits, and risk-weighted asset capacity.'}
+            </span>
+        </div>
+        <div class="pillar-card">
+            <b style="color:#ef4444;">2. Asset Quality (A)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'جودة المحفظة الائتمانية ورصد القروض غير المنتظمة ومخصصات التعثر.' if lang=='ar' else 'Non-performing loan ratios, provisioning adequacy, and credit quality.'}
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_p2:
+        st.markdown(f"""
+        <div class="pillar-card">
+            <b style="color:#9333ea;">3. Productivity (P)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'كفاءة تشغيل الأصول وتوظيف الموارد البشرية والتقنية.' if lang=='ar' else 'Asset utilization efficiency and workforce productivity metrics.'}
+            </span>
+        </div>
+        <div class="pillar-card">
+            <b style="color:#059669;">4. Profitability (P)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'العائد على الأصول، هامش الفائدة الصافي، واستدامة الأرباح.' if lang=='ar' else 'Net Interest Margin, ROA sustainability, and revenue quality.'}
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_p3:
+        st.markdown(f"""
+        <div class="pillar-card">
+            <b style="color:#d97706;">5. Efficiency (E)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'ضبط نسبة التكلفة إلى الدخل وترشيد المصاريف التشغيلية.' if lang=='ar' else 'Cost-to-income rationalization and overhead burden management.'}
+            </span>
+        </div>
+        <div class="pillar-card">
+            <b style="color:#0891b2;">6. Liquidity (L) & 7. Openness (O)</b><br>
+            <span style="font-size:12px; color:#64748b;">
+                {'الأصول عالية السيولة، استحقاق الالتزامات، والتحوط لمخاطر العملات والفوائد.' if lang=='ar' else 'HQLA liquidity, maturity mismatch, and FX/Interest rate market sensitivity.'}
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ================= SECTION 2: MACRO SECTOR ASSESSMENT =================
+st.subheader(T['sec_sector'])
+comp_df = get_sector_data(df_data, selected_year, lang=lang)
+
+k1, k2, k3, k4 = st.columns(4)
+total_b = len(comp_df)
+high_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High|عالية', na=False)])
+watch_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Watch|Early|مراقبة|إنذار', na=False)])
+stable_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Stable|مستقر', na=False)])
+
+with k1:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["monitored_banks"]}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{total_b} Banks</div></div>', unsafe_allow_html=True)
+with k2:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["high_risk"]}</div><div style="font-size:22px; font-weight:800; color:#ef4444;">{high_n}</div></div>', unsafe_allow_html=True)
+with k3:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["watch_warning"]}</div><div style="font-size:22px; font-weight:800; color:#f59e0b;">{watch_n}</div></div>', unsafe_allow_html=True)
+with k4:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["stable"]}</div><div style="font-size:22px; font-weight:800; color:#10b981;">{stable_n}</div></div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+col_chart, col_table = st.columns([5, 7])
+with col_chart:
     fig_bar = px.bar(
         comp_df,
         x='Bank',
@@ -472,10 +415,10 @@ elif nav_mode == T['nav_sector']:
     )
     fig_bar.update_traces(texttemplate='%{text:.2f}', textposition='outside')
     fig_bar.add_hline(y=50, line_dash="dash", line_color="#f59e0b", annotation_text="Early Warning Threshold (50.00)")
-    fig_bar.update_layout(height=380, margin=dict(t=25, b=25))
+    fig_bar.update_layout(height=340, margin=dict(t=20, b=20, l=10, r=10))
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    st.subheader(T['sec_matrix'])
+with col_table:
     display_comp_df = comp_df.rename(columns={
         'Bank': T['col_bank'],
         'Risk Score': T['col_risk'],
@@ -489,7 +432,6 @@ elif nav_mode == T['nav_sector']:
         'Liquidity': T['col_liq'],
         'Openness': T['col_opn']
     })
-
     st.dataframe(
         display_comp_df.style.format({
             T['col_risk']: '{:.2f}',
@@ -503,147 +445,135 @@ elif nav_mode == T['nav_sector']:
             T['col_opn']: '{:.1f}'
         }),
         use_container_width=True,
-        height=320
+        height=340
     )
 
-# ----------------- VIEW 3: SINGLE BANK DEEP-DIVE -----------------
-else:
-    analysis, insights, var_df = get_analysis(df_data, selected_bank, selected_year)
-    assessment = analysis['Assessment']
-    cat_scores = analysis['Category_Scores']
-    raw_status = assessment['Status']
-    st_text = STATUS_MAP.get(raw_status, {}).get(lang, raw_status)
+st.markdown("---")
 
-    top_esc_cat = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
-    adv_text = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])[lang]
-    adv_en = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])['en']
+# ================= SECTION 3: INSTITUTIONAL DEEP-DIVE =================
+st.subheader(f"{T['sec_deepdive']} — {selected_bank} ({selected_year})")
 
-    col_head, col_btn = st.columns([4, 2])
-    with col_head:
-        st.title(f"🏦 {selected_bank} — {selected_year}")
-        st.caption(f"{T['subtitle']} | Target: {selected_bank}")
-    with col_btn:
-        st.markdown("<br>", unsafe_allow_html=True)
-        pdf_s_bytes = create_bank_risk_pdf(
-            bank_name=selected_bank,
-            year=selected_year,
-            assessment=analysis['Assessment'],
-            cat_scores=analysis['Category_Scores'],
-            insights=insights,
-            advisory=adv_en
-        )
-        st.download_button(
-            label=T['download_single'],
-            data=pdf_s_bytes,
-            file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+analysis, insights, var_df = get_analysis(df_data, selected_bank, selected_year)
+assessment = analysis['Assessment']
+cat_scores = analysis['Category_Scores']
+raw_status = assessment['Status']
+st_text = STATUS_MAP.get(raw_status, {}).get(lang, raw_status)
 
-    st.markdown("---")
+top_esc_cat = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
+adv_text = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])[lang]
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["target_bank"]}</div><div class="kpi-value" style="font-size:20px;">{selected_bank}</div><div class="kpi-sub">Year: {selected_year}</div></div>', unsafe_allow_html=True)
-    with c2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["risk_score"]}</div><div class="kpi-value">{assessment["Risk_Score"]} / 100</div><div class="kpi-sub">Weighted Composite</div></div>', unsafe_allow_html=True)
-    with c3:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["stress_prob"]}</div><div class="kpi-value">{assessment["Stress_Probability_90D"]}%</div><div class="kpi-sub">Predictive Horizon</div></div>', unsafe_allow_html=True)
-    with c4:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["supervisory_status"]}</div><div class="kpi-value" style="color:{assessment["Color"]}; font-size:19px;">{st_text}</div><div class="kpi-sub">Official Action Rating</div></div>', unsafe_allow_html=True)
+c_d1, c_d2, c_d3, c_d4 = st.columns(4)
+with c_d1:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{selected_bank}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{selected_year}</div></div>', unsafe_allow_html=True)
+with c_d2:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["risk_score"]}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{assessment["Risk_Score"]} / 100</div></div>', unsafe_allow_html=True)
+with c_d3:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["stress_prob"]}</div><div style="font-size:22px; font-weight:800; color:#0f172a;">{assessment["Stress_Probability_90D"]}%</div></div>', unsafe_allow_html=True)
+with c_d4:
+    st.markdown(f'<div class="stat-box"><div style="font-size:11px; font-weight:700; color:#64748b;">{T["supervisory_status"]}</div><div style="font-size:20px; font-weight:800; color:{assessment["Color"]};">{st_text}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-    col_radar, col_gauge = st.columns([6, 4])
-    with col_radar:
-        st.subheader(T['radar_title'])
-        cat_labels = [
-            f"Capital ({cat_scores['Capital']:.1f})",
-            f"Asset Q. ({cat_scores['Asset Quality']:.1f})",
-            f"Productivity ({cat_scores['Productivity']:.1f})",
-            f"Profitability ({cat_scores['Profitability']:.1f})",
-            f"Efficiency ({cat_scores['Efficiency']:.1f})",
-            f"Liquidity ({cat_scores['Liquidity']:.1f})",
-            f"Openness ({cat_scores['Openness']:.1f})"
-        ]
-        values = [cat_scores['Capital'], cat_scores['Asset Quality'], cat_scores['Productivity'], cat_scores['Profitability'], cat_scores['Efficiency'], cat_scores['Liquidity'], cat_scores['Openness']]
-        norm_values = [40, 35, 30, 35, 30, 35, 30]
+col_radar, col_gauge = st.columns([6, 4])
+with col_radar:
+    st.markdown(f"##### {T['radar_title']}")
+    cat_labels = [
+        f"Capital ({cat_scores['Capital']:.1f})",
+        f"Asset Q. ({cat_scores['Asset Quality']:.1f})",
+        f"Productivity ({cat_scores['Productivity']:.1f})",
+        f"Profitability ({cat_scores['Profitability']:.1f})",
+        f"Efficiency ({cat_scores['Efficiency']:.1f})",
+        f"Liquidity ({cat_scores['Liquidity']:.1f})",
+        f"Openness ({cat_scores['Openness']:.1f})"
+    ]
+    values = [cat_scores['Capital'], cat_scores['Asset Quality'], cat_scores['Productivity'], cat_scores['Profitability'], cat_scores['Efficiency'], cat_scores['Liquidity'], cat_scores['Openness']]
+    norm_values = [40, 35, 30, 35, 30, 35, 30]
 
-        fig_radar = go.Figure()
-        fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name=selected_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
-        fig_radar.add_trace(go.Scatterpolar(r=norm_values + [norm_values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name='Sector Benchmark', line_color='#94a3b8', line_dash='dash', fillcolor='rgba(148, 163, 184, 0.15)'))
-        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=True, height=360, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_radar, use_container_width=True)
+    fig_radar = go.Figure()
+    fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name=selected_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
+    fig_radar.add_trace(go.Scatterpolar(r=norm_values + [norm_values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name='Sector Benchmark', line_color='#94a3b8', line_dash='dash', fillcolor='rgba(148, 163, 184, 0.15)'))
+    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=True, height=350, margin=dict(l=20, r=20, t=20, b=20))
+    st.plotly_chart(fig_radar, use_container_width=True)
 
-    with col_gauge:
-        st.subheader(T['gauge_title'])
-        fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=assessment['Risk_Score'],
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Composite Risk Gauge (0-100)", 'font': {'size': 13}},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': assessment['Color']},
-                'steps': [
-                    {'range': [0, 25], 'color': 'rgba(16, 185, 129, 0.15)'},
-                    {'range': [25, 50], 'color': 'rgba(245, 158, 11, 0.15)'},
-                    {'range': [50, 75], 'color': 'rgba(249, 115, 22, 0.15)'},
-                    {'range': [75, 100], 'color': 'rgba(239, 68, 68, 0.15)'}
-                ],
-                'threshold': {'line': {'color': "#ef4444", 'width': 3}, 'thickness': 0.75, 'value': 50.0}
-            }
-        ))
-        fig_gauge.update_layout(height=360, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_gauge, use_container_width=True)
+with col_gauge:
+    st.markdown(f"##### {T['gauge_title']}")
+    fig_gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=assessment['Risk_Score'],
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': f"{selected_bank} Composite Index", 'font': {'size': 13}},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': assessment['Color']},
+            'steps': [
+                {'range': [0, 25], 'color': 'rgba(16, 185, 129, 0.15)'},
+                {'range': [25, 50], 'color': 'rgba(245, 158, 11, 0.15)'},
+                {'range': [50, 75], 'color': 'rgba(249, 115, 22, 0.15)'},
+                {'range': [75, 100], 'color': 'rgba(239, 68, 68, 0.15)'}
+            ],
+            'threshold': {'line': {'color': "#ef4444", 'width': 3}, 'thickness': 0.75, 'value': 50.0}
+        }
+    ))
+    fig_gauge.update_layout(height=350, margin=dict(l=20, r=20, t=20, b=20))
+    st.plotly_chart(fig_gauge, use_container_width=True)
 
-    st.subheader(T['xai_title'])
-    col_esc, col_mit = st.columns(2)
-    with col_esc:
-        st.markdown(f"##### {T['escalators']}")
-        if insights['Top_Risk_Escalators']:
-            for esc in insights['Top_Risk_Escalators']:
-                st.warning(f"**{esc['Category']}:** Sub-Score = `{esc['Sub_Score']:.2f}` (+`{esc['Impact_Score']:.2f}` pts)")
-        else:
-            st.success("No severe risk escalators detected.")
-    with col_mit:
-        st.markdown(f"##### {T['mitigators']}")
-        if insights['Top_Risk_Mitigators']:
-            for mit in insights['Top_Risk_Mitigators']:
-                st.success(f"**{mit['Category']}:** Sub-Score = `{mit['Sub_Score']:.2f}`")
+st.markdown(f"##### {T['xai_title']}")
+col_esc, col_mit = st.columns(2)
+with col_esc:
+    st.markdown(f"**{T['escalators']}**")
+    if insights['Top_Risk_Escalators']:
+        for esc in insights['Top_Risk_Escalators']:
+            st.warning(f"**{esc['Category']}:** Sub-Score = `{esc['Sub_Score']:.2f}` (+`{esc['Impact_Score']:.2f}` pts)")
+    else:
+        st.success("No severe risk escalators detected.")
+with col_mit:
+    st.markdown(f"**{T['mitigators']}**")
+    if insights['Top_Risk_Mitigators']:
+        for mit in insights['Top_Risk_Mitigators']:
+            st.success(f"**{mit['Category']}:** Sub-Score = `{mit['Sub_Score']:.2f}`")
 
-    st.info(f"**{T['advisory_title']}** {adv_text}")
+st.info(f"**{T['advisory_title']}** {adv_text}")
 
-    st.markdown("---")
-    st.subheader(T['variance_title'])
-    search_q = st.text_input(T['search'], "")
-    
-    clean_var_df = var_df.copy()
-    clean_var_df['Indicator'] = clean_var_df['Indicator'].apply(lambda x: clean_indicator_string(x, lang=lang))
-    
-    if search_q:
-        clean_var_df = clean_var_df[clean_var_df['Indicator'].str.contains(search_q, case=False, na=False)]
+st.markdown("---")
 
-    clean_var_df = clean_var_df.rename(columns={
-        'Indicator': 'Indicator / KPI Name' if lang == 'en' else 'اسم المؤشر المالي',
-        'Bank_Value': f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}',
-        'Industry_Norm': 'Sector Benchmark' if lang == 'en' else 'معيار القطاع',
-        'Absolute_Diff': 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق',
-        'Variance_Pct': 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
-    })
+# ================= SECTION 4: DETAILED VARIANCE MATRIX =================
+st.subheader(T['sec_variance'])
+search_q = st.text_input(T['search'], "")
 
-    val_col = f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}'
-    norm_col = 'Sector Benchmark' if lang == 'en' else 'معيار القطاع'
-    diff_col = 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق'
-    pct_col = 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
+clean_var_df = var_df.copy()
+clean_var_df['Indicator'] = clean_var_df['Indicator'].apply(lambda x: clean_indicator_string(x, lang=lang))
 
-    st.dataframe(
-        clean_var_df.style.format({
-            val_col: '{:,.2f}',
-            norm_col: '{:,.2f}',
-            diff_col: '{:,.2f}',
-            pct_col: '{:+.2f}%'
-        }),
-        use_container_width=True,
-        height=320
-    )
+if search_q:
+    clean_var_df = clean_var_df[clean_var_df['Indicator'].str.contains(search_q, case=False, na=False)]
+
+clean_var_df = clean_var_df.rename(columns={
+    'Indicator': 'Indicator / KPI Name' if lang == 'en' else 'اسم المؤشر المالي',
+    'Bank_Value': f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}',
+    'Industry_Norm': 'Sector Benchmark' if lang == 'en' else 'معيار القطاع',
+    'Absolute_Diff': 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق',
+    'Variance_Pct': 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
+})
+
+val_col = f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}'
+norm_col = 'Sector Benchmark' if lang == 'en' else 'معيار القطاع'
+diff_col = 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق'
+pct_col = 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
+
+st.dataframe(
+    clean_var_df.style.format({
+        val_col: '{:,.2f}',
+        norm_col: '{:,.2f}',
+        diff_col: '{:,.2f}',
+        pct_col: '{:+.2f}%'
+    }),
+    use_container_width=True,
+    height=360
+)
+
+# ================= ACADEMIC FOOTER =================
+st.markdown("""
+<div class="footer-box">
+    <b>Early Warning Model for Banks' Risk (EWM-BR)</b> — CAPPELO Empirical Framework<br>
+    Academic & Supervisory Intelligence Platform © 2026. All Rights Reserved.
+</div>
+""", unsafe_allow_html=True)

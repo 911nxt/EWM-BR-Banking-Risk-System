@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -15,7 +16,7 @@ from xai_explainer import explain_bank_risk_factors
 from pdf_generator import create_bank_risk_pdf, create_sector_risk_pdf
 
 st.set_page_config(
-    page_title="EWM-BR | Early Warning Banking Risk System",
+    page_title="EWM-BR | Banking Risk Intelligence Platform",
     page_icon="🏦",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,36 +24,123 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    text-align: center;
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
 }
-.stat-title { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-.stat-title-ar { font-size: 11px; color: #0284c7; margin-bottom: 4px; }
-.stat-value { font-size: 22px; font-weight: bold; color: #0f172a; }
+
+.kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+}
+.kpi-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+.kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+.kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.kpi-sub {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-DICT_AR = {
-    "title": "🏦 Early Warning System for Banking Risk (EWM-BR)",
-    "title_ar": "🏦 منصة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
-    "subtitle": "Predictive Banking Soundness Evaluation based on CAPPELO Framework (Groups 1–7)",
-    "subtitle_ar": "التقييم والاستشراف الذكي لسلامة البنوك استناداً لمحاور CAPPELO السبعة",
-    "radar_title": "🎯 CAPPELO Multidimensional Radar",
-    "radar_title_ar": "رادار تقييم محاور CAPPELO السبعة",
-    "gauge_title": "⏱️ Composite Risk Gauge",
-    "gauge_title_ar": "مقياس المخاطر المركب (0-100)",
-    "xai_title": "🔍 Explainable AI (XAI) Risk Drivers",
-    "xai_title_ar": "تفكيك وتفسير أسباب المخاطر (XAI)",
-    "matrix_title": "📋 Detailed Variance Matrix vs Industry Norm",
-    "matrix_title_ar": "مصفوفة الانحرافات التفصيلية مقابل معيار الصناعة"
+I18N = {
+    'en': {
+        'title': "🏦 Early Warning System for Banking Risk (EWM-BR)",
+        'subtitle': "Predictive Financial Soundness Evaluation based on CAPPELO Framework (Groups 1–7)",
+        'nav_sector': "🏢 Cross-Sector Master View",
+        'nav_single': "🔍 Single Institution Assessment",
+        'total_banks': "Monitored Institutions",
+        'high_risk': "High Risk Exposure",
+        'watch_warning': "Watch / Early Warning",
+        'stable': "Stable Soundness",
+        'sec_ranking': "📊 Banking Sector Composite Risk Distribution",
+        'sec_matrix': "📋 Cross-Institutional Soundness Matrix (All Monitored Banks)",
+        'target_bank': "Target Institution",
+        'risk_score': "Overall Risk Score",
+        'stress_prob': "90-Day Stress Probability",
+        'supervisory_status': "Supervisory Classification",
+        'radar_title': "🎯 CAPPELO Multidimensional Risk Profile",
+        'gauge_title': "⏱️ Composite Risk Index Gauge",
+        'xai_title': "🔍 Explainable AI (XAI) Risk Decomposition",
+        'escalators': "🚨 Key Risk Escalators (Increasing Vulnerability)",
+        'mitigators': "🛡️ Key Risk Mitigators (Safety Buffers)",
+        'advisory_title': "💡 Supervisory Action Directive:",
+        'variance_title': "📋 Core Indicators Variance Matrix vs. Sector Benchmark",
+        'search': "Search KPI / Indicator Name:",
+        'download_sector': "📄 Download Master Sector PDF",
+        'download_single': "📄 Download Institution PDF",
+        'col_bank': "Bank Institution",
+        'col_risk': "Risk Score (0-100)",
+        'col_prob': "90D Stress Prob.",
+        'col_status': "Supervisory Rating",
+        'col_cap': "Capital (C)",
+        'col_ast': "Asset Quality (A)",
+        'col_prd': "Productivity (P)",
+        'col_prf': "Profitability (P)",
+        'col_eff': "Efficiency (E)",
+        'col_liq': "Liquidity (L)",
+        'col_opn': "Openness (O)"
+    },
+    'ar': {
+        'title': "🏦 منصة الإنذار المبكر للمخاطر المصرفية (EWM-BR)",
+        'subtitle': "التقييم والاستشراف الذكي لسلامة البنوك استناداً لمحاور CAPPELO السبعة (Groups 1–7)",
+        'nav_sector': "🏢 الشاشة الشاملة للقطاع المصرفي",
+        'nav_single': "🔍 التحليل التفصيلي لمصرف فردي",
+        'total_banks': "المصارف الخاضعة للرقابة",
+        'high_risk': "مؤسسات عالية المخاطر",
+        'watch_warning': "مؤسسات قيد المراقبة / إنذار",
+        'stable': "مؤسسات مستقرة",
+        'sec_ranking': "📊 توزيع وترتيب مؤشرات المخاطر للقطاع المصرفي",
+        'sec_matrix': "📋 مصفوفة السلامة المالية المقارنة لكافة البنوك",
+        'target_bank': "المصرف الخاضع للتقييم",
+        'risk_score': "درجة المخاطر المركبة",
+        'stress_prob': "احتمالية الضغط المالي (90 يوماً)",
+        'supervisory_status': "التصنيف الرقابي",
+        'radar_title': "🎯 رادار أبعاد السلامة المصرفية (CAPPELO)",
+        'gauge_title': "⏱️ عداد مؤشر المخاطر التراكمي",
+        'xai_title': "🔍 التفسير السببي وتفكيك محركات الخطر (XAI)",
+        'escalators': "🚨 المحاور الأكثر رفعاً للمخاطر",
+        'mitigators': "🛡️ محركات الأمان وتخفيف المخاطر",
+        'advisory_title': "💡 التوجيه والتوصية الرقابية:",
+        'variance_title': "📋 مصفوفة انحراف المؤشرات التفصيلية عن معيار الصناعة",
+        'search': "بحث في المؤشرات المالية:",
+        'download_sector': "📄 تحميل تقرير القطاع الشامل (PDF)",
+        'download_single': "📄 تحميل تقرير المصرف (PDF)",
+        'col_bank': "المصرف",
+        'col_risk': "درجة الخطر",
+        'col_prob': "احتمال الضغط",
+        'col_status': "التصنيف الرقابي",
+        'col_cap': "كفاية رأس المال",
+        'col_ast': "جودة الأصول",
+        'col_prd': "الإنتاجية",
+        'col_prf': "الربحية",
+        'col_eff': "الكفاءة التشغيلية",
+        'col_liq': "السيولة",
+        'col_opn': "الحساسية والسوق"
+    }
 }
 
-RECOMMENDATIONS_MAP = {
+RECOMMENDATIONS = {
     'Capital': {
         'en': "Reinforce capital adequacy buffers and optimize risk-weighted asset growth according to Basel III standards.",
         'ar': "تعزيز كفاية رأس المال وضبط نمو الموجودات المرجحة بالمخاطر وفق متطلبات بازل 3."
@@ -83,26 +171,34 @@ RECOMMENDATIONS_MAP = {
     }
 }
 
-STATUS_TRANSLATIONS = {
+STATUS_MAP = {
     "مستقر (Stable)": {"en": "Stable", "ar": "مستقر"},
     "مراقبة (Watch)": {"en": "Watch", "ar": "تحت المراقبة"},
     "إنذار مبكر (Early Warning)": {"en": "Early Warning", "ar": "إنذار مبكر"},
     "خطر مرتفع (High Risk)": {"en": "High Risk", "ar": "خطر مرتفع"}
 }
 
+def clean_indicator_string(text, lang='en'):
+    raw = str(text)
+    if lang == 'en':
+        clean = re.sub(r'\([\s\u0600-\u06FF0-9\-–]*\)', '', raw)
+        clean = re.sub(r'[\u0600-\u06FF]', '', clean)
+        return re.sub(r'\s+', ' ', clean).strip()
+    return raw
+
 @st.cache_data(show_spinner=False)
-def get_cached_dataset():
+def get_dataset():
     return load_cappelo_banks_data()
 
 @st.cache_data(show_spinner=False)
-def get_cached_analysis(df, bank, year):
+def get_analysis(df, bank, year):
     analysis_res = analyze_bank(df, bank, year)
     insights_res = explain_bank_risk_factors(df, bank, year)
     var_res = generate_variance_matrix(df, bank, year)
     return analysis_res, insights_res, var_res
 
 @st.cache_data(show_spinner=False)
-def get_all_banks_comparison(df, year):
+def get_sector_data(df, year, lang='en'):
     banks = sorted(df[df['Year'] == year]['Bank'].unique().tolist())
     records = []
     for b in banks:
@@ -110,11 +206,13 @@ def get_all_banks_comparison(df, year):
             res = analyze_bank(df, b, year)
             ast = res['Assessment']
             cats = res['Category_Scores']
+            raw_st = ast['Status']
+            st_text = STATUS_MAP.get(raw_st, {}).get(lang, raw_st)
             records.append({
                 'Bank': b,
                 'Risk Score': ast['Risk_Score'],
                 '90D Stress Prob (%)': ast['Stress_Probability_90D'],
-                'Supervisory Status': ast['Status'],
+                'Supervisory Status': st_text,
                 'Capital': round(cats['Capital'], 2),
                 'Asset Quality': round(cats['Asset Quality'], 2),
                 'Productivity': round(cats['Productivity'], 2),
@@ -130,65 +228,65 @@ def get_all_banks_comparison(df, year):
         comp_df = comp_df.sort_values(by='Risk Score', ascending=False).reset_index(drop=True)
     return comp_df
 
-df_data = get_cached_dataset()
+df_data = get_dataset()
 
+# Sidebar Navigation
 with st.sidebar:
-    st.title("⚙️ Control Panel | لوحة التحكم")
-    show_arabic = st.checkbox("🌐 إظهار الترجمة العربية الفورية (Show Arabic)", value=True)
+    st.markdown("### ⚙️ Platform Settings")
+    enable_arabic = st.toggle("🌐 إظهار الواجهة باللغة العربية (Arabic)", value=False)
+    lang = 'ar' if enable_arabic else 'en'
+    T = I18N[lang]
+
     st.markdown("---")
-    
     all_years = sorted(df_data['Year'].unique().tolist(), reverse=True)
     selected_year = st.selectbox("Fiscal Year | السنة المالية:", all_years)
-    
-    view_selection = st.radio(
-        "Mode | نمط العرض:",
-        ["🏢 All-Banks Sector Overview (Default)", "🔍 Single Bank Deep-Dive"],
+
+    nav_mode = st.radio(
+        "Navigation Mode | نمط العرض:",
+        [T['nav_sector'], T['nav_single']],
         index=0
     )
-    
+
     bank_list = sorted(df_data[df_data['Year'] == selected_year]['Bank'].unique().tolist())
-    if view_selection == "🔍 Single Bank Deep-Dive":
-        selected_bank = st.selectbox("Target Bank | المصرف الخاضع للتقييم:", bank_list)
+    if nav_mode == T['nav_single']:
+        selected_bank = st.selectbox("Select Target Bank | المصرف الخاضع للتقييم:", bank_list)
     else:
         selected_bank = bank_list[0]
 
-comp_df = get_all_banks_comparison(df_data, selected_year)
+comp_df = get_sector_data(df_data, selected_year, lang=lang)
 
-col_header, col_action = st.columns([4, 2])
-with col_header:
-    st.title(DICT_AR["title"])
-    if show_arabic:
-        st.markdown(f"<div style='color:#0284c7; font-size:16px; margin-top:-10px;'>{DICT_AR['title_ar']}</div>", unsafe_allow_html=True)
-    st.caption(f"{DICT_AR['subtitle']} | Year: {selected_year}")
-    if show_arabic:
-        st.markdown(f"<div style='color:#64748b; font-size:12px; margin-top:-6px;'>{DICT_AR['subtitle_ar']}</div>", unsafe_allow_html=True)
-
-with col_action:
+# Header Section with Direct Download
+col_head, col_btn = st.columns([4, 2])
+with col_head:
+    st.title(T['title'])
+    st.caption(f"{T['subtitle']} | Year: {selected_year}")
+with col_btn:
     st.markdown("<br>", unsafe_allow_html=True)
-    if view_selection == "🏢 All-Banks Sector Overview (Default)":
-        sector_pdf_bytes = create_sector_risk_pdf(comp_df, selected_year)
+    if nav_mode == T['nav_sector']:
+        comp_df_en = get_sector_data(df_data, selected_year, lang='en')
+        pdf_bytes = create_sector_risk_pdf(comp_df_en, selected_year)
         st.download_button(
-            label="📄 Download All-Banks PDF Report",
-            data=sector_pdf_bytes,
+            label=T['download_sector'],
+            data=pdf_bytes,
             file_name=f"EWM_BR_Sector_Report_{selected_year}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
     else:
-        analysis_single, insights_single, _ = get_cached_analysis(df_data, selected_bank, selected_year)
-        top_cat = insights_single['Top_Risk_Escalators'][0]['Category'] if insights_single['Top_Risk_Escalators'] else 'Capital'
-        adv_obj = RECOMMENDATIONS_MAP.get(top_cat, RECOMMENDATIONS_MAP['Capital'])
-        single_pdf_bytes = create_bank_risk_pdf(
+        analysis_s, insights_s, _ = get_analysis(df_data, selected_bank, selected_year)
+        top_c = insights_s['Top_Risk_Escalators'][0]['Category'] if insights_s['Top_Risk_Escalators'] else 'Capital'
+        adv_en = RECOMMENDATIONS.get(top_c, RECOMMENDATIONS['Capital'])['en']
+        pdf_s_bytes = create_bank_risk_pdf(
             bank_name=selected_bank,
             year=selected_year,
-            assessment=analysis_single['Assessment'],
-            cat_scores=analysis_single['Category_Scores'],
-            insights=insights_single,
-            advisory=adv_obj['en']
+            assessment=analysis_s['Assessment'],
+            cat_scores=analysis_s['Category_Scores'],
+            insights=insights_s,
+            advisory=adv_en
         )
         st.download_button(
-            label=f"📄 Download {selected_bank} PDF",
-            data=single_pdf_bytes,
+            label=T['download_single'],
+            data=pdf_s_bytes,
             file_name=f"EWM_BR_{selected_bank}_{selected_year}.pdf",
             mime="application/pdf",
             use_container_width=True
@@ -196,28 +294,26 @@ with col_action:
 
 st.markdown("---")
 
-if view_selection == "🏢 All-Banks Sector Overview (Default)":
+# Main Content Router
+if nav_mode == T['nav_sector']:
     k1, k2, k3, k4 = st.columns(4)
-    total_banks = len(comp_df)
-    high_risk_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High Risk', na=False)])
-    watch_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Watch|Early', na=False)])
-    stable_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Stable', na=False)])
+    total_b = len(comp_df)
+    high_n = len(comp_df[comp_df['Supervisory Status'].str.contains('High|عالية', na=False)])
+    watch_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Watch|Early|مراقبة|إنذار', na=False)])
+    stable_n = len(comp_df[comp_df['Supervisory Status'].str.contains('Stable|مستقر', na=False)])
 
     with k1:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Monitored Institutions</div>' + (f'<div class="stat-title-ar">المصارف الخاضعة للرقابة</div>' if show_arabic else '') + f'<div class="stat-value">{total_banks} Banks</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["total_banks"]}</div><div class="kpi-value">{total_b} Banks</div><div class="kpi-sub">Coverage: 100%</div></div>', unsafe_allow_html=True)
     with k2:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">High Risk Rating</div>' + (f'<div class="stat-title-ar">مؤسسات عالية المخاطر</div>' if show_arabic else '') + f'<div class="stat-value" style="color:#ef4444;">{high_risk_n}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["high_risk"]}</div><div class="kpi-value" style="color:#ef4444;">{high_n}</div><div class="kpi-sub">Critical Alert</div></div>', unsafe_allow_html=True)
     with k3:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Watch / Early Warning</div>' + (f'<div class="stat-title-ar">مراقبة / إنذار مبكر</div>' if show_arabic else '') + f'<div class="stat-value" style="color:#f59e0b;">{watch_n}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["watch_warning"]}</div><div class="kpi-value" style="color:#f59e0b;">{watch_n}</div><div class="kpi-sub">Heightened Vigilance</div></div>', unsafe_allow_html=True)
     with k4:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Stable Rating</div>' + (f'<div class="stat-title-ar">مؤسسات مستقرة</div>' if show_arabic else '') + f'<div class="stat-value" style="color:#10b981;">{stable_n}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["stable"]}</div><div class="kpi-value" style="color:#10b981;">{stable_n}</div><div class="kpi-sub">Within Safety Norm</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.subheader(f"📊 Banking Sector Composite Risk Ranking ({selected_year})")
-    if show_arabic:
-        st.caption("مقارنة وترتيب مستويات المخاطر الشاملة لكافة بنوك القطاع")
-        
+    st.subheader(T['sec_ranking'])
     fig_bar = px.bar(
         comp_df,
         x='Bank',
@@ -225,82 +321,94 @@ if view_selection == "🏢 All-Banks Sector Overview (Default)":
         color='Risk Score',
         color_continuous_scale='RdYlGn_r',
         text='Risk Score',
-        labels={'Risk Score': 'Risk Score (0-100)', 'Bank': 'Institution'}
+        labels={'Risk Score': T['risk_score'], 'Bank': T['col_bank']}
     )
     fig_bar.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-    fig_bar.add_hline(y=50, line_dash="dash", line_color="orange", annotation_text="Early Warning Benchmark (50.00)")
+    fig_bar.add_hline(y=50, line_dash="dash", line_color="#f59e0b", annotation_text="Early Warning Threshold (50.00)")
     fig_bar.update_layout(height=380, margin=dict(t=25, b=25))
     st.plotly_chart(fig_bar, use_container_width=True)
 
-    st.subheader("📋 Cross-Institutional Comparative Matrix (All 8 Banks)")
-    if show_arabic:
-        st.caption("مصفوفة التقييم المقارن الشاملة للمصارف الثمانية عبر محاور CAPPELO")
-        
+    st.subheader(T['sec_matrix'])
+    display_comp_df = comp_df.rename(columns={
+        'Bank': T['col_bank'],
+        'Risk Score': T['col_risk'],
+        '90D Stress Prob (%)': T['col_prob'],
+        'Supervisory Status': T['col_status'],
+        'Capital': T['col_cap'],
+        'Asset Quality': T['col_ast'],
+        'Productivity': T['col_prd'],
+        'Profitability': T['col_prf'],
+        'Efficiency': T['col_eff'],
+        'Liquidity': T['col_liq'],
+        'Openness': T['col_opn']
+    })
+
     st.dataframe(
-        comp_df.style.format({
-            'Risk Score': '{:.2f}',
-            '90D Stress Prob (%)': '{:.2f}%',
-            'Capital': '{:.1f}',
-            'Asset Quality': '{:.1f}',
-            'Productivity': '{:.1f}',
-            'Profitability': '{:.1f}',
-            'Efficiency': '{:.1f}',
-            'Liquidity': '{:.1f}',
-            'Openness': '{:.1f}'
+        display_comp_df.style.format({
+            T['col_risk']: '{:.2f}',
+            T['col_prob']: '{:.2f}%',
+            T['col_cap']: '{:.1f}',
+            T['col_ast']: '{:.1f}',
+            T['col_prd']: '{:.1f}',
+            T['col_prf']: '{:.1f}',
+            T['col_eff']: '{:.1f}',
+            T['col_liq']: '{:.1f}',
+            T['col_opn']: '{:.1f}'
         }),
         use_container_width=True,
         height=320
     )
 
 else:
-    analysis, insights, var_df = get_cached_analysis(df_data, selected_bank, selected_year)
+    analysis, insights, var_df = get_analysis(df_data, selected_bank, selected_year)
     assessment = analysis['Assessment']
     cat_scores = analysis['Category_Scores']
-    
     raw_status = assessment['Status']
-    status_en = STATUS_TRANSLATIONS.get(raw_status, {}).get('en', raw_status)
-    status_ar = STATUS_TRANSLATIONS.get(raw_status, {}).get('ar', raw_status)
-    
-    top_esc = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
-    adv_obj = RECOMMENDATIONS_MAP.get(top_esc, RECOMMENDATIONS_MAP['Capital'])
+    st_text = STATUS_MAP.get(raw_status, {}).get(lang, raw_status)
+
+    top_esc_cat = insights['Top_Risk_Escalators'][0]['Category'] if insights['Top_Risk_Escalators'] else 'Capital'
+    adv_text = RECOMMENDATIONS.get(top_esc_cat, RECOMMENDATIONS['Capital'])[lang]
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Target Institution</div>' + (f'<div class="stat-title-ar">المصرف المختار</div>' if show_arabic else '') + f'<div class="stat-value" style="font-size:18px;">{selected_bank} ({selected_year})</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["target_bank"]}</div><div class="kpi-value" style="font-size:20px;">{selected_bank}</div><div class="kpi-sub">Year: {selected_year}</div></div>', unsafe_allow_html=True)
     with c2:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Risk Score</div>' + (f'<div class="stat-title-ar">درجة المخاطر الإجمالية</div>' if show_arabic else '') + f'<div class="stat-value">{assessment["Risk_Score"]} / 100</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["risk_score"]}</div><div class="kpi-value">{assessment["Risk_Score"]} / 100</div><div class="kpi-sub">Weighted Composite</div></div>', unsafe_allow_html=True)
     with c3:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">90D Stress Prob.</div>' + (f'<div class="stat-title-ar">احتمالية الضغط المالي</div>' if show_arabic else '') + f'<div class="stat-value">{assessment["Stress_Probability_90D"]}%</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["stress_prob"]}</div><div class="kpi-value">{assessment["Stress_Probability_90D"]}%</div><div class="kpi-sub">Predictive Horizon</div></div>', unsafe_allow_html=True)
     with c4:
-        st.markdown(f'<div class="stat-card"><div class="stat-title">Supervisory Status</div>' + (f'<div class="stat-title-ar">التصنيف الرقابي</div>' if show_arabic else '') + f'<div class="stat-value" style="color:{assessment["Color"]}; font-size:18px;">{status_en if not show_arabic else status_ar}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-label">{T["supervisory_status"]}</div><div class="kpi-value" style="color:{assessment["Color"]}; font-size:19px;">{st_text}</div><div class="kpi-sub">Official Action Rating</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     col_radar, col_gauge = st.columns([6, 4])
     with col_radar:
-        st.subheader(DICT_AR["radar_title"])
-        if show_arabic:
-            st.caption(DICT_AR["radar_title_ar"])
-            
-        categories = ['Capital (C)', 'Asset Quality (A)', 'Productivity (P)', 'Profitability (P)', 'Efficiency (E)', 'Liquidity (L)', 'Openness (O)']
+        st.subheader(T['radar_title'])
+        cat_labels = [
+            f"Capital ({cat_scores['Capital']:.1f})",
+            f"Asset Q. ({cat_scores['Asset Quality']:.1f})",
+            f"Productivity ({cat_scores['Productivity']:.1f})",
+            f"Profitability ({cat_scores['Profitability']:.1f})",
+            f"Efficiency ({cat_scores['Efficiency']:.1f})",
+            f"Liquidity ({cat_scores['Liquidity']:.1f})",
+            f"Openness ({cat_scores['Openness']:.1f})"
+        ]
         values = [cat_scores['Capital'], cat_scores['Asset Quality'], cat_scores['Productivity'], cat_scores['Profitability'], cat_scores['Efficiency'], cat_scores['Liquidity'], cat_scores['Openness']]
-        
+        norm_values = [40, 35, 30, 35, 30, 35, 30]
+
         fig_radar = go.Figure()
-        fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=categories + [categories[0]], fill='toself', name=selected_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
-        fig_radar.add_trace(go.Scatterpolar(r=[40, 35, 30, 35, 30, 35, 30, 40], theta=categories + [categories[0]], fill='toself', name='Industry Norm', line_color='#94a3b8', line_dash='dash', fillcolor='rgba(148, 163, 184, 0.15)'))
+        fig_radar.add_trace(go.Scatterpolar(r=values + [values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name=selected_bank, line_color='#2563eb', fillcolor='rgba(37, 99, 235, 0.25)'))
+        fig_radar.add_trace(go.Scatterpolar(r=norm_values + [norm_values[0]], theta=cat_labels + [cat_labels[0]], fill='toself', name='Sector Benchmark', line_color='#94a3b8', line_dash='dash', fillcolor='rgba(148, 163, 184, 0.15)'))
         fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])), showlegend=True, height=360, margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_radar, use_container_width=True)
 
     with col_gauge:
-        st.subheader(DICT_AR["gauge_title"])
-        if show_arabic:
-            st.caption(DICT_AR["gauge_title_ar"])
-            
+        st.subheader(T['gauge_title'])
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=assessment['Risk_Score'],
             domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Composite Risk Gauge", 'font': {'size': 14}},
+            title={'text': "Composite Risk Gauge (0-100)", 'font': {'size': 13}},
             gauge={
                 'axis': {'range': [0, 100]},
                 'bar': {'color': assessment['Color']},
@@ -310,51 +418,59 @@ else:
                     {'range': [50, 75], 'color': 'rgba(249, 115, 22, 0.15)'},
                     {'range': [75, 100], 'color': 'rgba(239, 68, 68, 0.15)'}
                 ],
-                'threshold': {'line': {'color': "red", 'width': 3}, 'thickness': 0.75, 'value': 50.0}
+                'threshold': {'line': {'color': "#ef4444", 'width': 3}, 'thickness': 0.75, 'value': 50.0}
             }
         ))
         fig_gauge.update_layout(height=360, margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_gauge, use_container_width=True)
 
-    st.subheader(DICT_AR["xai_title"])
-    if show_arabic:
-        st.caption(DICT_AR["xai_title_ar"])
-        
+    st.subheader(T['xai_title'])
     col_esc, col_mit = st.columns(2)
     with col_esc:
-        st.markdown("##### 🚨 Top Risk Escalators | المحاور الأكثر رفعاً للمخاطر")
+        st.markdown(f"##### {T['escalators']}")
         if insights['Top_Risk_Escalators']:
             for esc in insights['Top_Risk_Escalators']:
                 st.warning(f"**{esc['Category']}:** Sub-Score = `{esc['Sub_Score']:.2f}` (+`{esc['Impact_Score']:.2f}` pts)")
         else:
-            st.success("No critical escalators detected.")
+            st.success("No severe risk escalators detected.")
     with col_mit:
-        st.markdown("##### 🛡️ Top Risk Mitigators | عوامل الأمان وتخفيف المخاطر")
+        st.markdown(f"##### {T['mitigators']}")
         if insights['Top_Risk_Mitigators']:
             for mit in insights['Top_Risk_Mitigators']:
                 st.success(f"**{mit['Category']}:** Sub-Score = `{mit['Sub_Score']:.2f}`")
 
-    st.info(f"**💡 Supervisory Advisory:** {adv_obj['en']}")
-    if show_arabic:
-        st.markdown(f"<div style='color:#0369a1; font-weight:500; margin-top:-6px; margin-bottom:12px;'><b>💡 التوصية الرقابية:</b> {adv_obj['ar']}</div>", unsafe_allow_html=True)
+    st.info(f"**{T['advisory_title']}** {adv_text}")
 
     st.markdown("---")
-    st.subheader(DICT_AR["matrix_title"])
-    if show_arabic:
-        st.caption(DICT_AR["matrix_title_ar"])
-        
-    search_term = st.text_input("Search Indicator | بحث في المؤشرات:", "")
-    filtered_var_df = var_df
-    if search_term:
-        filtered_var_df = var_df[var_df['Indicator'].str.contains(search_term, case=False, na=False)]
+    st.subheader(T['variance_title'])
+    search_q = st.text_input(T['search'], "")
+    
+    clean_var_df = var_df.copy()
+    clean_var_df['Indicator'] = clean_var_df['Indicator'].apply(lambda x: clean_indicator_string(x, lang=lang))
+    
+    if search_q:
+        clean_var_df = clean_var_df[clean_var_df['Indicator'].str.contains(search_q, case=False, na=False)]
+
+    clean_var_df = clean_var_df.rename(columns={
+        'Indicator': 'Indicator / KPI Name' if lang == 'en' else 'اسم المؤشر المالي',
+        'Bank_Value': f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}',
+        'Industry_Norm': 'Sector Benchmark' if lang == 'en' else 'معيار القطاع',
+        'Absolute_Diff': 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق',
+        'Variance_Pct': 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
+    })
+
+    val_col = f'{selected_bank} Value' if lang == 'en' else f'قيمة {selected_bank}'
+    norm_col = 'Sector Benchmark' if lang == 'en' else 'معيار القطاع'
+    diff_col = 'Variance (Abs)' if lang == 'en' else 'الانحراف المطلق'
+    pct_col = 'Variance (%)' if lang == 'en' else 'نسبة التغير (%)'
 
     st.dataframe(
-        filtered_var_df.style.format({
-            'Bank_Value': '{:,.2f}',
-            'Industry_Norm': '{:,.2f}',
-            'Absolute_Diff': '{:,.2f}',
-            'Variance_Pct': '{:+.2f}%'
+        clean_var_df.style.format({
+            val_col: '{:,.2f}',
+            norm_col: '{:,.2f}',
+            diff_col: '{:,.2f}',
+            pct_col: '{:+.2f}%'
         }),
         use_container_width=True,
-        height=300
+        height=320
     )

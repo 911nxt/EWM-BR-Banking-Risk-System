@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWM-BR | Early Warning Banking Risk Intelligence</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        tajawal: ['Tajawal', 'sans-serif'],
+                        jakarta: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#0f172a',
+                            900: '#020617',
+                            950: '#010409',
+                        },
+                        brand: {
+                            blue: '#2563eb',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(37, 99, 235, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px -10px rgba(37, 99, 235, 0.25);
+        }
+        .glow-bg {
+            background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.15) 0%, rgba(2, 6, 23, 0) 70%);
+        }
+        .typewriter-cursor {
+            display: inline-block;
+            width: 3px;
+            background-color: #38bdf8;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-100 min-h-screen relative overflow-x-hidden selection:bg-brand-blue selection:text-white">
+
+    <!-- Glowing Backdrop -->
+    <div class="fixed inset-0 glow-bg pointer-events-none"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-6 lg:px-16 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-blue to-brand-cyan flex items-center justify-center shadow-lg shadow-brand-blue/30">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight text-white font-jakarta">EWM-BR</span>
+                    <span class="text-xs block text-slate-400 font-medium">المنظومة الرقابية الذكية للإنذار المبكر</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="http://localhost:8501" target="_blank" class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-blue hover:bg-blue-600 text-white shadow-lg shadow-brand-blue/25 transition-all flex items-center gap-2">
+                    <span>فتح المنصة</span>
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Typewriter Effect -->
+    <header class="max-w-5xl mx-auto pt-20 pb-16 px-6 text-center relative z-10">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-brand-blue/30 text-sky-400 text-sm font-medium mb-8">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>CAPPELO Framework Core Empirical Analysis (2023–2024)</span>
+        </div>
+
+        <!-- Dynamic Main Title -->
+        <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight sm:leading-tight mb-6">
+            منظومة الاستشراف والإنذار المبكر<br>
+            <span class="bg-gradient-to-r from-sky-400 via-brand-cyan to-brand-blue bg-clip-text text-transparent">
+                لتقييم المخاطر المصرفية
+            </span>
+        </h1>
+
+        <!-- Typewriter Intro Paragraph -->
+        <div class="min-h-[80px] sm:min-h-[60px] text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed font-normal">
+            <span id="typewriter"></span><span class="typewriter-cursor">&nbsp;</span>
+        </div>
+
+        <!-- CTA Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-4">
+            <a href="http://localhost:8501" target="_blank" class="px-8 py-3.5 rounded-xl font-bold text-base bg-gradient-to-r from-brand-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-xl shadow-brand-blue/30 transition-all flex items-center gap-2">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span>الدخول إلى لوحة المتابعة الشاملة</span>
+            </a>
+            <a href="#framework" class="px-8 py-3.5 rounded-xl font-bold text-base glass-card hover:bg-slate-800/60 text-slate-200 transition-all flex items-center gap-2">
+                <i data-lucide="book-open" class="w-5 h-5 text-slate-400"></i>
+                <span>محاور إطار CAPPELO</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Key Metrics Cards -->
+    <section class="max-w-6xl mx-auto px-6 py-8 relative z-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass-card rounded-2xl p-6 text-center">
+                <div class="text-3xl sm:text-4xl font-extrabold text-sky-400 font-jakarta mb-1">8</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-400">بنوك مجهلة تحت الرقابة</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center">
+                <div class="text-3xl sm:text-4xl font-extrabold text-brand-cyan font-jakarta mb-1">7</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-400">محاور CAPPELO التحليلية</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center">
+                <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 font-jakarta mb-1">144</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-400">مؤشراً مالياً معيارياً</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center">
+                <div class="text-3xl sm:text-4xl font-extrabold text-indigo-400 font-jakarta mb-1">90 يوم</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-400">أفق التنبؤ بالضغط المالي</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CAPPELO 7 Pillars Section -->
+    <section id="framework" class="max-w-7xl mx-auto px-6 py-16 relative z-10">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-3">ركائز التقييم الرقابي (CAPPELO Framework)</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+                تحليل كمي واقتصادي متكامل يوازن بين كفاية رأس المال، جودة الائتمان، سيولة المصارف، وحساسية الأسواق.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Pillar 1 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
+                    <i data-lucide="landmark" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">1. كفاية رأس المال (Capital - C)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    قياس متانة الملاءة الرأسمالية والرافعة المالية ونسب بازل لمواجهة الخسائر غير المتوقعة وضمان امتصاص الصدمات.
+                </p>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mb-4">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">2. جودة الأصول (Asset Quality - A)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    فحص نسب القروض المتعثرة (NPL) ومخصصات الديون المشكوك في تحصيلها ومعدلات تعثر المحافظ الائتمانية.
+                </p>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-4">
+                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">3. الإنتاجية (Productivity - P)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    تقييم كفاءة توظيف الأصول ومعدل إنتاجية الموارد البشرية والتقنية لتحقيق أعلى عائد تشغيلي.
+                </p>
+            </div>
+
+            <!-- Pillar 4 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
+                    <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">4. الربحية والعوائد (Profitability - P)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    تحليل العائد على الأصول (ROA)، هامش صافي الفائدة (NIM)، واستدامة مصادر الدخل التشغيلي الأساسية.
+                </p>
+            </div>
+
+            <!-- Pillar 5 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+                    <i data-lucide="sliders" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">5. الكفاءة التشغيلية (Efficiency - E)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    رصد نسبة التكلفة إلى الدخل وترشيد المصاريف العمومية والإدارية مقارنة بالمعيار الإرشادي للقطاع.
+                </p>
+            </div>
+
+            <!-- Pillar 6 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6">
+                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4">
+                    <i data-lucide="droplet" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">6. السيولة المصرفية (Liquidity - L)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    قياس نسبة الأصول عالية السيولة واستقرار هيكل الودائع ومطابقة استحقاقات الأصول والخصوم.
+                </p>
+            </div>
+
+            <!-- Pillar 7 -->
+            <div class="glass-card glass-card-hover transition-all rounded-2xl p-6 md:col-span-2 lg:col-span-3">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-4">
+                    <i data-lucide="globe" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">7. الانفتاح والحساسية لمخاطر السوق (Openness & Market Risk - O)</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    مراقبة مراكز العملات الأجنبية، تقلبات أسعار الفائدة، وفجوات الحساسية السوقية لحماية الاستقرار المالي.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 glass-card py-8 text-center text-slate-500 text-xs sm:text-sm relative z-10">
+        <p>© 2026 Early Warning Model for Banks' Risk (EWM-BR) — CAPPELO Supervisory Intelligence</p>
+    </footer>
+
+    <!-- Typewriter Script & Icons Init -->
+    <script>
+        lucide.createIcons();
+
+        const sentences = [
+            "منصة رقابية متقدمة ترصد الاستقرار المالي عبر إطار CAPPELO المعتمد.",
+            "استخراج فوري للمؤشرات المعيارية لـ 8 بنوك مجهلة لتأكيد الحياد والسرية.",
+            "توليد تقارير PDF تنفيذية وتفسير سببي متقدم (Explainable AI) للمخاطر."
+        ];
+
+        let sentenceIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const targetElement = document.getElementById("typewriter");
+        const typingSpeed = 40;
+        const deletingSpeed = 20;
+        const pauseDelay = 2200;
+
+        function typeEffect() {
+            const currentSentence = sentences[sentenceIndex];
+            
+            if (isDeleting) {
+                targetElement.textContent = currentSentence.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                targetElement.textContent = currentSentence.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let nextTimeout = isDeleting ? deletingSpeed : typingSpeed;
+
+            if (!isDeleting && charIndex === currentSentence.length) {
+                isDeleting = true;
+                nextTimeout = pauseDelay;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                sentenceIndex = (sentenceIndex + 1) % sentences.length;
+                nextTimeout = 400;
+            }
+
+            setTimeout(typeEffect, nextTimeout);
+        }
+
+        document.addEventListener("DOMContentLoaded", typeEffect);
+    </script>
+</body>
+</html>

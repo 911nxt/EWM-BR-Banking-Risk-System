@@ -5,7 +5,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-def clean_status_text(val):
+def sanitize_text(val):
     text = str(val)
     if "High" in text:
         return "High Risk"
@@ -15,7 +15,9 @@ def clean_status_text(val):
         return "Watch"
     elif "Stable" in text:
         return "Stable"
-    return re.sub(r'[\u0600-\u06FF]', '', text).replace('()', '').strip()
+    clean = re.sub(r'\([\s\u0600-\u06FF0-9\-–]*\)', '', text)
+    clean = re.sub(r'[\u0600-\u06FF]', '', clean)
+    return re.sub(r'\s+', ' ', clean).strip()
 
 def create_sector_risk_pdf(comp_df, year):
     buffer = io.BytesIO()
@@ -50,18 +52,17 @@ def create_sector_risk_pdf(comp_df, year):
 
     story = []
     story.append(Paragraph("EWM-BR Comprehensive Banking Sector Risk Report", title_style))
-    story.append(Paragraph(f"Cross-Sectional Financial Soundness Evaluation (CAPPELO Framework) | Fiscal Year: {year}", subtitle_style))
+    story.append(Paragraph(f"Cross-Sectional Financial Soundness Benchmark (CAPPELO Framework) | Fiscal Year: {year}", subtitle_style))
 
     headers = ['Bank', 'Risk Score', '90D Stress', 'Status', 'Capital', 'Asset Q.', 'Productivity', 'Profitability', 'Efficiency', 'Liquidity', 'Openness']
     table_data = [headers]
 
     for _, row in comp_df.iterrows():
-        status_clean = clean_status_text(row['Supervisory Status'])
         table_data.append([
             str(row['Bank']),
             f"{row['Risk Score']:.2f}",
             f"{row['90D Stress Prob (%)']:.2f}%",
-            status_clean,
+            sanitize_text(row['Supervisory Status']),
             f"{row['Capital']:.1f}",
             f"{row['Asset Quality']:.1f}",
             f"{row['Productivity']:.1f}",
@@ -73,9 +74,9 @@ def create_sector_risk_pdf(comp_df, year):
 
     t = Table(table_data, colWidths=[65, 65, 75, 85, 55, 55, 65, 65, 55, 55, 55])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0f172a')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
@@ -111,11 +112,10 @@ def create_bank_risk_pdf(bank_name, year, assessment, cat_scores, insights, advi
     story.append(Paragraph("EWM-BR Bank Risk Assessment Report", title_style))
     story.append(Paragraph(f"Financial Soundness Evaluation | Bank: {bank_name} ({year})", subtitle_style))
 
-    status_clean = clean_status_text(assessment['Status'])
     summary_data = [
         ["Target Bank", bank_name, "Financial Year", str(year)],
         ["Overall Risk Score", f"{assessment['Risk_Score']} / 100", "90-Day Stress Prob.", f"{assessment['Stress_Probability_90D']}%"],
-        ["Health Classification", status_clean, "Supervisory Action", clean_status_text(assessment['Action'])]
+        ["Health Classification", sanitize_text(assessment['Status']), "Supervisory Action", sanitize_text(assessment['Action'])]
     ]
     t_sum = Table(summary_data, colWidths=[120, 150, 120, 150])
     t_sum.setStyle(TableStyle([
